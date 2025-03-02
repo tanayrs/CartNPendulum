@@ -202,8 +202,9 @@ classdef singleAgentCartNPendulum < rl.env.MATLABEnvironment
             
         
             % Initiate figure and hold on to overlay multiple plots
-            if isempty(this.Figure)
+            if isempty(this.Figure) || isvalid(this.Figure)
                 this.Figure = figure();
+                shg;
                 hold on;
                 axis equal;
                 xlim([-2, 2]); 

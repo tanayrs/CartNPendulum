@@ -50,6 +50,11 @@ trainOpts = rlTrainingOptions( ...
 
 trainingStats = train(agent, env, trainOpts);
 
+timestamp = datestr(now, 'yyyymmdd_HHMMSS'); % Get current date and time
+filename = ['trainedAgent_' timestamp '.mat']; % Create a unique filename
+save(filename, 'agent', 'env'); % Save with timestamped filename
+
 plot(env);
+
 simOptions = rlSimulationOptions(MaxSteps=500);
 experience = sim(env,agent,simOptions);
