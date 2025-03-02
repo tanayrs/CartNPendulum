@@ -1,38 +1,58 @@
-classdef myCartNPendulum < rl.env.MATLABEnvironment
-    %MYENVCLASS: Template for defining custom environment in MATLAB.    
+classdef singleAgentCartNPendulum < rl.env.MATLABEnvironment
+    %SINGLEAGENTCARTNPENDULUM: Template for defining custom environment in MATLAB.    
     
     %% Properties (set properties' attributes accordingly)
     properties
-        % Specify and initialize environment's necessary properties    
-        % Acceleration due to gravity in m/s^2
-        Gravity = 9.8
+                % Mass of Pendulum (kg)
+        mp = 4;
+
+        % Mass of Cart (kg)
+        mc = 2;
+
+        % Length of Pole (m)
+        d = 1;
+
+        % Gravity (m/s^2)
+        g = 10;
+
+        % Goal State
+        theta_target = 0; % in rad
+        thetadot_target = 0; % in rad/s
+        x_target = 0; % in m/s
+        xdot_target = 0; % in m/s
         
-        % Mass of the cart
-        CartMass = 1.0
+        % Rated Torque of Motors
+        % rated_torque_cart = 6*this.g/100;
+        % wheel_rad = 0.05;
+        % MaxForce = rated_torque_cart/wheel_rad;
+        MaxForce = 12;
         
-        % Mass of the pole
-        PoleMass = 0.1
-        
-        % Half the length of the pole
-        HalfPoleLength = 0.5
-        
-        % Max Force the input can apply
-        MaxForce = 10
-               
+        % Inertia of System
+        Ig = 0;
+        I = 0;
+
+        % Viscous Drag
+        b = 1;
+
         % Sample time
-        Ts = 0.02
+        Ts = 0.01;
+
+        % Figure Initialisation
+        Figure;
+        CartPlot;
+        PendulumPlot;
         
         % Angle at which to fail the episode (radians)
-        AngleThreshold = 12 * pi/180
+        AngleThreshold = deg2rad(45);
         
         % Distance at which to fail the episode
         DisplacementThreshold = 2.4
         
         % Reward each time step the cart-pole is balanced
-        RewardForNotFalling = 1
+        RewardForNotFalling = 1*0.01
         
         % Penalty when the cart-pole fails to balance
-        PenaltyForFalling = -10 
+        PenaltyForFalling = -10
     end
     
     properties
@@ -49,18 +69,23 @@ classdef myCartNPendulum < rl.env.MATLABEnvironment
     methods              
         % Contructor method creates an instance of the environment
         % Change class name and constructor name accordingly
-        function this = myEnvClass()
+        function this = singleAgentCartNPendulum()
             % Initialize Observation settings
             ObservationInfo = rlNumericSpec([4 1]);
             ObservationInfo.Name = 'CartPole States';
             ObservationInfo.Description = 'x, dx, theta, dtheta';
             
             % Initialize Action settings   
-            ActionInfo = rlFiniteSetSpec([-1 1]);
-            ActionInfo.Name = 'CartPole Action';
+            ActionInfo = rlFiniteSetSpec(-12:12);
+            % ActionInfo = rlNumericSpec([1 1], 'LowerLimit', -12, 'UpperLimit', 12);
+            ActionInfo.Name = "CartPole Action";
+
+            % ActionInfo.Name = 'CartPole Action';
             
             % The following line implements built-in functions of RL env
             this = this@rl.env.MATLABEnvironment(ObservationInfo,ActionInfo);
+
+            this.Figure = [];
             
             % Initialize property values and pre-compute necessary values
             updateActionInfo(this);
@@ -69,83 +94,36 @@ classdef myCartNPendulum < rl.env.MATLABEnvironment
         % Apply system dynamics and simulates the environment with the 
         % given action for one step.
         function [Observation,Reward,IsDone,Info] = step(this,Action)
-
-                % Custom step function to construct cart-pole environment for the function
-                % name case.
-                %
-                % This function applies the given action to the environment and evaluates
-                % the system dynamics for one simulation step.
-                
-                % Define the environment constants.
-            
-                p = params();
-                mp = p.mp; mc = p.mc; d = p.d; g = p.g; I = p.I; b= p.b;
-                
-                % Check if the given action is valid.
-                % if ~ismember(Action,[-MaxForce MaxForce])
-                %     error('Action must be %g for going left and %g for going right.',...
-                %         -MaxForce,MaxForce);
-                % end
-            
-                M = Action(1);
-                F = Action(2);
-                
-                % Unpack the state vector from the logged signals.
-                xdot = this.State(2);
-                theta = this.State(3);
-                thetadot = this.State(4);
-                
-                % Apply motion equations.
-            
-                xddot = (I*F + d^2*mp*F - I*b*xdot - b*d^2*mp*xdot - d^3*mp^2*thetadot^2*sin(theta) ...
-                         + d*mp*M*cos(theta) + d^2*g*mp^2*cos(theta)*sin(theta) - I*d*mp*thetadot^2*sin(theta)) ...
-                        / (I*mc + I*mp + d^2*mp^2 - d^2*mp^2*cos(theta)^2 + d^2*mc*mp);
-            
-                thetaddot = (mc*M + mp*M + d*mp*F*cos(theta) + d*g*mp^2*sin(theta) - d^2*mp^2*thetadot^2*cos(theta)*sin(theta) ...
-                             - b*d*mp*xdot*cos(theta) + d*g*mc*mp*sin(theta)) ...
-                            / (I*mc + I*mp + d^2*mp^2 - d^2*mp^2*cos(theta)^2 + d^2*mc*mp);
-            
-                
-                % Perform Euler integration to calculate next state.
-                NextState = this.State + Ts.*[xdot;xddot;thetadot;thetaddot];
-                
-                % Copy next state to next observation.
-                NextObs = NextState;
-                
-                % Check terminal condition.
-                X = NextObs(1);
-                Theta = NextObs(3);
-                IsDone = abs(X) > DisplacementThreshold || abs(Theta) > AngleThreshold;
-                
-                % Calculate reward.
-                if ~IsDone
-                    Reward = RewardForNotFalling;
-                else
-                    Reward = PenaltyForFalling;
-                end
-
             Info = [];
             
             % Get action
-            Force = getForce(this,Action);            
+            F = getForce(this,Action);            
             
             % Unpack state vector
-            XDot = this.State(2);
-            Theta = this.State(3);
-            ThetaDot = this.State(4);
+            xdot = this.State(2);
+            theta = this.State(3);
+            thetadot = this.State(4);
             
-            % Cache to avoid recomputation
-            CosTheta = cos(Theta);
-            SinTheta = sin(Theta);            
-            SystemMass = this.CartMass + this.PoleMass;
-            temp = (Force + this.PoleMass*this.HalfPoleLength * ThetaDot^2 * SinTheta) / SystemMass;
-
             % Apply motion equations            
-            ThetaDotDot = (this.Gravity * SinTheta - CosTheta* temp) / (this.HalfPoleLength * (4.0/3.0 - this.PoleMass * CosTheta * CosTheta / SystemMass));
-            XDotDot  = temp - this.PoleMass*this.HalfPoleLength * ThetaDotDot * CosTheta / SystemMass;
+            xddot = (this.I*F + this.d^2*this.mp*F - this.I*this.b*xdot - ...
+                this.b*this.d^2*this.mp*xdot - this.d^3*this.mp^2* ...
+                thetadot^2*sin(theta) + ...
+                this.d^2*this.g*this.mp^2*cos(theta)*sin(theta) - ...
+                this.I*this.d*this.mp*thetadot^2* ...
+                sin(theta)) / (this.I*this.mc + this.I*this.mp + ...
+                this.d^2*this.mp^2 - this.d^2*this.mp^2* ...
+                cos(theta)^2 + this.d^2*this.mc*this.mp);
+            
+            thetaddot = (this.d*this.mp*F*cos(theta) ...
+                + this.d*this.g*this.mp^2*sin(theta) - this.d^2*this.mp^2* ...
+                thetadot^2*cos(theta)*sin(theta) - this.b*this.d*this.mp* ...
+                xdot*cos(theta) + this.d*this.g*this.mc*this.mp* sin(theta)) ...
+                / (this.I*this.mc + this.I*this.mp + this.d^2*this.mp^2 - ...
+                this.d^2*this.mp^2*cos(theta)^2 + this.d^2*this.mc*this.mp);
+
             
             % Euler integration
-            Observation = this.State + this.Ts.*[XDot;XDotDot;ThetaDot;ThetaDotDot];
+            Observation = this.State + this.Ts.*[xdot;xddot;thetadot;thetaddot];
 
             % Update system states
             this.State = Observation;
@@ -153,7 +131,8 @@ classdef myCartNPendulum < rl.env.MATLABEnvironment
             % Check terminal condition
             X = Observation(1);
             Theta = Observation(3);
-            IsDone = abs(X) > this.DisplacementThreshold || abs(Theta) > this.AngleThreshold;
+            % IsDone = abs(X) > this.DisplacementThreshold || abs(Theta) > this.AngleThreshold;
+            IsDone = abs(Theta) > this.AngleThreshold;
             this.IsDone = IsDone;
             
             % Get reward
@@ -195,8 +174,11 @@ classdef myCartNPendulum < rl.env.MATLABEnvironment
         end
         % update the action info based on max force
         function updateActionInfo(this)
-            this.ActionInfo.Elements = this.MaxForce*[-1 1];
+            % Ensure ActionInfo is of type rlFiniteSetSpec
+            this.ActionInfo = rlFiniteSetSpec(this.MaxForce * [-1, 1]); 
+            this.ActionInfo.Name = "CartPole Action"; 
         end
+
         
         % Reward function
         function Reward = getReward(this)
@@ -209,39 +191,56 @@ classdef myCartNPendulum < rl.env.MATLABEnvironment
         
         % (optional) Visualization method
         function plot(this)
-            % Initiate the visualization
+            % Extract state variables
+            x = this.State(1);   % Cart position
+            theta = this.State(3); % Pendulum angle
+        
+            % Define cart and pendulum dimensions
+            pendulum_length = this.d;
+            cart_width = pendulum_length/2;
+            cart_height = pendulum_length/8;
             
-            % Update the visualization
-            envUpdatedCallback(this)
+        
+            % Initiate figure and hold on to overlay multiple plots
+            if isempty(this.Figure)
+                this.Figure = figure();
+                hold on;
+                axis equal;
+                xlim([-2, 2]); 
+                ylim([-1, 1]);
+                xlabel('X-axis');
+                ylabel('Y-axis');
+                title('Cart-Pendulum System');
+            
+                % Draw cart
+                this.CartPlot = plot([x-cart_width/2, x+cart_width/2, x+cart_width/2, x-cart_width/2, x-cart_width/2], [0,0,-cart_height,-cart_height,0], 'w', 'LineWidth', 2);  % Initialize with NaN values
+                
+                % Draw pendulum
+                this.PendulumPlot = plot([x, x + pendulum_length*sin(-theta)], [0, pendulum_length*cos(theta)], 'b', 'LineWidth', 2);  % Initialize with NaN values
+            
+                hold off;
+            else
+                % Update cart position
+                set(this.CartPlot, 'XData', [x-cart_width/2, x+cart_width/2, x+cart_width/2, x-cart_width/2, x-cart_width/2]);
+                
+                % Update pendulum position
+                set(this.PendulumPlot, 'XData', [x, x + pendulum_length*sin(-theta)], ...
+                                       'YData', [0, pendulum_length*cos(theta)]);
+            end
+        
+            % Refresh plot
+            drawnow;
+            
+            % Call the environment update callback
+            envUpdatedCallback(this);
         end
+
         
         % (optional) Properties validation through set methods
         function set.State(this,state)
             validateattributes(state,{'numeric'},{'finite','real','vector','numel',4},'','State');
             this.State = double(state(:));
             notifyEnvUpdated(this);
-        end
-        function set.HalfPoleLength(this,val)
-            validateattributes(val,{'numeric'},{'finite','real','positive','scalar'},'','HalfPoleLength');
-            this.HalfPoleLength = val;
-            notifyEnvUpdated(this);
-        end
-        function set.Gravity(this,val)
-            validateattributes(val,{'numeric'},{'finite','real','positive','scalar'},'','Gravity');
-            this.Gravity = val;
-        end
-        function set.CartMass(this,val)
-            validateattributes(val,{'numeric'},{'finite','real','positive','scalar'},'','CartMass');
-            this.CartMass = val;
-        end
-        function set.PoleMass(this,val)
-            validateattributes(val,{'numeric'},{'finite','real','positive','scalar'},'','PoleMass');
-            this.PoleMass = val;
-        end
-        function set.MaxForce(this,val)
-            validateattributes(val,{'numeric'},{'finite','real','positive','scalar'},'','MaxForce');
-            this.MaxForce = val;
-            updateActionInfo(this);
         end
         function set.Ts(this,val)
             validateattributes(val,{'numeric'},{'finite','real','positive','scalar'},'','Ts');
