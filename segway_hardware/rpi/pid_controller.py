@@ -66,7 +66,7 @@ last_encoded = 0
 
 # Hardware PWM settings
 PWM_FREQUENCY = 20000  # 20kHz frequency for smoother motor operation
-PWM_RANGE = 1000000    # Maximum resolution (1M steps)
+PWM_RANGE = 40000    # Maximum resolution (1M steps)
 
 # Deadband for Motor Inputs
 deadzone = 0.0
