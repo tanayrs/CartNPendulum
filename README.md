@@ -4,6 +4,7 @@
 
 ​
 Segway Params:
+    
     p.m = 0.841; % in kg
     
     p.d = 0.2; % in m
