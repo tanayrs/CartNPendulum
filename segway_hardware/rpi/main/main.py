@@ -23,7 +23,7 @@ if __name__ == "__main__":
     logger = DataLogger()
     
     # Calibration
-    imu.calibrate()
+    #imu.calibrate()
     logger.start()
     
     try:

@@ -31,7 +31,7 @@ class DataLogger:
                 data.get('output', 0),
                 data.get('speed', 0)
             ])
-            self.log_file.flush()
+            print(f"Logged: {datetime.now().isoformat()}, {data.get('roll',0)}, {data.get('pitch', 0)}, {data.get('target', 0)}, {data.get('output', 0)}, {data.get('speed', 0)}, {self.log_file.flush()}")
             
     def stop(self):
         if self.log_file:
