@@ -356,6 +356,37 @@ class MPU6050:
     def read(self):
         return self.value
 
+# Class for encoder pulse counting
+class Encoder:
+    def __init__(self, pin_a, pin_b):
+        self.pin_a = pin_a
+        self.pin_b = pin_b
+        self.value = 0
+        self.last_encoded = 0
+        
+        GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(pin_b, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        
+        GPIO.add_event_detect(pin_a, GPIO.BOTH, callback=self.update)
+        GPIO.add_event_detect(pin_b, GPIO.BOTH, callback=self.update)
+    
+    def update(self, channel):
+        MSB = GPIO.input(self.pin_a)
+        LSB = GPIO.input(self.pin_b)
+        
+        encoded = (MSB << 1) | LSB
+        sum_value = (self.last_encoded << 2) | encoded
+        
+        if sum_value == 0b1101 or sum_value == 0b0100 or sum_value == 0b0010 or sum_value == 0b1011:
+            self.value += 1
+        elif sum_value == 0b1110 or sum_value == 0b0111 or sum_value == 0b0001 or sum_value == 0b1000:
+            self.value -= 1
+            
+        self.last_encoded = encoded
+    
+    def read(self):
+        return self.value
+    
 # Class for motor control using hardware PWM
 class HardwarePWMMotor:
     def __init__(self, pwm_pin, dir_pin, pwm_range=PWM_RANGE, pwm_frequency=PWM_FREQUENCY):
@@ -434,6 +465,71 @@ class HardwarePWMMotor:
     
     def speed(self):
         return self.filtered_speed
+
+# Class for sensor filtering
+class EncoderDataProcessor:
+    def __init__(self, ppr, steer_offset, invert_direction, invert_steer, vel_cutoff_freq, sampling_time):
+        self.ppr = ppr
+        self.steer_offset = steer_offset
+        self.invert_direction = invert_direction
+        self.invert_steer = invert_steer
+        self.vel_cutoff_freq = vel_cutoff_freq
+        self.sampling_time = sampling_time
+        
+        self.current_ticks = 0
+        self.last_ticks = 0
+        self.filtered_speed = 0.0
+        self.alpha = 1.0 / (1.0 + vel_cutoff_freq * 2 * pi * sampling_time)
+    
+    def update(self, ticks, steer_accumulated_ticks, steer_ticks_offset):
+        self.current_ticks = ticks * (-1 if self.invert_direction else 1)
+        
+        # Calculate raw speed (ticks per second)
+        raw_speed = (self.current_ticks - self.last_ticks) / self.sampling_time
+        
+        # Apply low-pass filter to speed
+        self.filtered_speed = self.alpha * self.filtered_speed + (1 - self.alpha) * raw_speed
+        
+        self.last_ticks = self.current_ticks
+    
+    def ticks(self):
+        return self.current_ticks
+    
+    def speed(self):
+        return self.filtered_speed
+
+def init_logging():
+    global log_dir, log_filename, log_file, log_writer
+    
+    # Create logs directory if it doesn't exist
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    
+    # Create a new log file with timestamp in the name
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = f"{log_dir}/robot_log_{timestamp}.csv"
+    
+    # Open the log file and write header
+    log_file = open(log_filename, 'w', newline='')
+    log_writer = csv.writer(log_file)
+    
+    # Write header row
+    log_writer.writerow([
+        'timestamp_ms',
+        'tilt_angle',
+        'tilt_rate',
+        'position',
+        'velocity',
+        'pwm_output',
+        'Kp',
+        'Ki',
+        'Kd',
+        'Kp_pos',
+        'Ki_pos',
+        'Kd_pos'
+    ])
+    
+    print(f"Logging data to {log_filename}")
 
 def init_logging():
     global log_dir, log_filename, log_file, log_writer
@@ -599,7 +695,6 @@ def print_imu_data(data):
     print(f"Angle: Roll={angle['roll']:.2f}°, Pitch={angle['pitch']:.2f}°, Yaw={angle['yaw']:.2f}°")
     print(f"Temperature: {temp:.2f}°C")
     print("-" * 50)
-
 
 # Main program
 if __name__ == "__main__":
