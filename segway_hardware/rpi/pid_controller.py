@@ -1,9 +1,24 @@
 #!/usr/bin/env python3
 
-import smbus
+# Try to import dependencies, install if missing
+try:
+    import smbus
+except ImportError:
+    print("Installing smbus library...")
+    import subprocess
+    subprocess.check_call(["sudo", "apt-get", "install", "-y", "python3-smbus"])
+    import smbus
+
+try:
+    import RPi.GPIO as GPIO
+except ImportError:
+    print("Installing RPi.GPIO library...")
+    import subprocess
+    subprocess.check_call(["sudo", "apt-get", "install", "-y", "python3-rpi.gpio"])
+    import RPi.GPIO as GPIO
+
 import math
 import time
-import RPi.GPIO as GPIO
 import csv
 import os
 from datetime import datetime
@@ -308,19 +323,20 @@ class MPU6050:
             'angle': {'roll': self.roll, 'pitch': self.pitch, 'yaw': self.yaw},
             'temp': self.read_temp()
         }
-
-# Class for encoder pulse counting
-class Encoder:
-    def __init__(self, pin_a, pin_b):
-        self.pin_a = pin_a
-        self.pin_b = pin_b
-        self.value = 0
-        self.last_encoded = 0
+    def update(self, channel):
+        # Use the channel parameter to read correct inputs
+        MSB = GPIO.input(self.pin_a)
+        LSB = GPIO.input(self.pin_b)
         
-        GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(pin_b, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        encoded = (MSB << 1) | LSB
+        sum_value = (self.last_encoded << 2) | encoded
         
-        GPIO.add_event_detect(pin_a, GPIO.BOTH, callback=self.update)
+        if sum_value == 0b1101 or sum_value == 0b0100 or sum_value == 0b0010 or sum_value == 0b1011:
+            self.value += 1
+        elif sum_value == 0b1110 or sum_value == 0b0111 or sum_value == 0b0001 or sum_value == 0b1000:
+            self.value -= 1
+            
+        self.last_encoded = encoded
         GPIO.add_event_detect(pin_b, GPIO.BOTH, callback=self.update)
     
     def update(self, channel):
@@ -385,16 +401,17 @@ class HardwarePWMMotor:
     def cleanup(self):
         self.pi.set_PWM_dutycycle(self.pwm_pin, 0)
         self.pi.stop()
-
-# Class for sensor filtering
-class EncoderDataProcessor:
-    def __init__(self, ppr, steer_offset, invert_direction, invert_steer, vel_cutoff_freq, sampling_time):
-        self.ppr = ppr
-        self.steer_offset = steer_offset
-        self.invert_direction = invert_direction
-        self.invert_steer = invert_steer
-        self.vel_cutoff_freq = vel_cutoff_freq
-        self.sampling_time = sampling_time
+    def update(self, ticks, steer_accumulated_ticks=0, steer_ticks_offset=0):
+        # Parameters steer_accumulated_ticks and steer_ticks_offset are kept for compatibility
+        self.current_ticks = ticks * (-1 if self.invert_direction else 1)
+        
+        # Calculate raw speed (ticks per second)
+        raw_speed = (self.current_ticks - self.last_ticks) / self.sampling_time
+        
+        # Apply low-pass filter to speed
+        self.filtered_speed = self.alpha * self.filtered_speed + (1 - self.alpha) * raw_speed
+        
+        self.last_ticks = self.current_ticks
         
         self.current_ticks = 0
         self.last_ticks = 0
@@ -604,22 +621,10 @@ if __name__ == "__main__":
         prev_time = time.time() * 1000
         deadband_sign = 1
         prev_input_sign = 1
-        
-        # Initialize the MPU6050
-        mpu = MPU6050()
-        
-        # Calibrate the sensor
-        mpu.calibrate()
-
-        # Initialize logging
-        init_logging()
-
-        # Initialize timing variables
-        sample_rate = 10  # Hz (samples per second)
-        sample_interval = 1.0 / sample_rate
-        last_sample_time = time.time()
-        
-        print(f"Starting balancing loop with PWM range: {PWM_RANGE}, PWM frequency: {PWM_FREQUENCY}Hz")
+        # Initialize time variables
+        t = time.time() * 1000000  # Initial time in microseconds
+        lastt = t  # Initial last time
+        dt = sampling_time  # Initial dt
         
         # Main loop
         while True:
@@ -634,6 +639,24 @@ if __name__ == "__main__":
                 print_imu_data(data)
                 
                 last_sample_time = current_time
+            
+            start_time = time.time() * 1000000  # microseconds
+            
+            update_encoder_data()
+            
+            encoder_value = wheel_enc.read()
+            
+            # Update time and calculate dt
+            lastt = t
+            t = time.time() * 1000000  # microseconds
+            dt = (t - lastt) / 1000000  # seconds
+            # Update sensor data
+            data = mpu.update()
+            
+            # Display data
+            print_imu_data(data)
+            
+            last_sample_time = current_time
             
             start_time = time.time() * 1000000  # microseconds
             
