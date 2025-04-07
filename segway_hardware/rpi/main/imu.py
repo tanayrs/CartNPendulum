@@ -58,6 +58,16 @@ class MPU6050:
         }
         
         gyro_rates = {
-            'roll_rate': (self.gyro_x - self.gyro_error_x) * (self.elapsed_time),
-            'pitch_rate': (self.gyro_y - gyro_error_Y )
+            'roll_rate': (self.gyro_x - self.gyro_error_x) * self.elapsed_time,
+            'pitch_rate': (self.gyro_y - self.gyro_error_y) * self.elapsed_time  # Fixed variable name
+        }  # Added closing brace
 
+        # Complementary filter implementation
+        self.roll = 0.96 * (self.roll + gyro_rates['roll_rate']) + 0.04 * acc_angles['roll']
+        self.pitch = 0.96 * (self.pitch + gyro_rates['pitch_rate']) + 0.04 * acc_angles['pitch']
+
+        return {
+            'accel': {'x': self.acc_x, 'y': self.acc_y, 'z': self.acc_z},
+            'gyro': {'x': self.gyro_x, 'y': self.gyro_y, 'z': self.gyro_z},
+            'angle': {'roll': self.roll, 'pitch': self.pitch}
+        }
