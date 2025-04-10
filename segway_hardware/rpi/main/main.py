@@ -55,8 +55,7 @@ if __name__ == "__main__":
             # Control calculation using roll angle and gyro rate
             control_output = controller.update(
                 current_angle=roll_angle,
-                gyro_rate=gyro_rate_x
-            )
+                gyro_rate=gyro_rate_x)
 
             # Actuation: Set motor speed based on control output
             motor.set_speed(control_output)
@@ -72,10 +71,11 @@ if __name__ == "__main__":
                 })
                 last_log_time = current_time
 
-            # Timing control to maintain consistent loop rate (100 Hz)
+            # Timing control to maintain loop time 400ms (changed to fix I/O error
             elapsed = time.time() - start_time
-            if elapsed < 0.01:
-                time.sleep(0.01 - elapsed)
+            loop_time = 0.04
+            if elapsed < loop_time:
+                time.sleep(loop_time - elapsed)
 
     except Exception as e:
         print(f"Error: {e}")
