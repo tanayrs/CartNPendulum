@@ -10,7 +10,9 @@ def motor_encoder_test():
     
     # Data for plotting
     x_vals = []
-    y_vals = []
+    encoder_vals = []
+    commanded_vals = []
+    
     start_time = time.time()
     
     try:
@@ -24,32 +26,36 @@ def motor_encoder_test():
         print("Starting integrated motor/encoder test...")
         
         while time.time() - start_time < 6:  # Total test duration
-            # Update motor phase
             elapsed = time.time() - start_time
+            
+            # Update motor phase based on elapsed time
             for speed, label, trigger_time in phases:
                 if elapsed < trigger_time:
-                    if motor.current_speed != speed:
+                    if motor.current_speed != speed:  # Use current_speed to track state
                         print(f"Entering {label} phase")
                         motor.set_speed(speed)
                     break
             
-            # Update encoder data
-            count = encoder.get_count()
+            # Log data for plotting
+            encoder_count = encoder.get_count()
             x_vals.append(elapsed)
-            y_vals.append(count)
+            encoder_vals.append(encoder_count)
+            commanded_vals.append(motor.current_speed)
             
         print("Test complete - saving plot...")
         
         # Save plot as an image file
-        plt.figure(figsize=(8, 6))
-        plt.plot(x_vals, y_vals, 'b-')
+        plt.figure(figsize=(10, 6))
+        plt.plot(x_vals, encoder_vals, label="Encoder Count", color="blue")
+        plt.plot(x_vals, commanded_vals, label="Commanded Speed", color="red", linestyle="--")
         plt.title("Motor/Encoder Test")
         plt.xlabel("Time (s)")
-        plt.ylabel("Encoder Count")
+        plt.ylabel("Values")
+        plt.legend()
         plt.grid(True)
         
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        filename = f"motor_encoder_test_{timestamp}.png"
+        filename = f"plots/motor_encoder_test_{timestamp}.png"
         plt.savefig(filename)
         print(f"Plot saved as {filename}")
 
