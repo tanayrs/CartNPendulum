@@ -22,9 +22,9 @@ class Encoder:
         diff = (encoded - self.last_encoded) & 0x03
         
         if diff == 0x03 or diff == 0x01:
-            self.value += 1
-        elif diff == 0x02 or diff == 0x00:
             self.value -= 1
+        elif diff == 0x02 or diff == 0x00:
+            self.value += 1
             
         self.last_encoded = encoded
 
