@@ -15,6 +15,8 @@ def directional_encoder_test():
     angle_vals = []
     rate_vals = []
     commanded_vals = []
+    pos_vals = []
+    vel_vals = []
     
     start_time = time.time()
     
@@ -44,32 +46,57 @@ def directional_encoder_test():
             # Update data
             angle = encoder.get_angle()
             rate = encoder.get_rate()
+            pos = encoder.get_pos()
+            vel = encoder.get_vel()
             
             x_vals.append(elapsed)
             angle_vals.append(angle)
             rate_vals.append(rate)
             commanded_vals.append(motor.current_speed)
+            pos_vals.append(pos)
+            vel_vals.append(vel)
             
         print("Test complete - saving plot...")
         
         # Create plot with two subplots
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+        fig, axs = plt.subplots(3, 2, figsize=(10, 8))
+        ax1, ax2, ax3, ax4, ax5, ax6 = axs.flatten()
         
         # Plot angle and commanded speed
-        ax1.plot(x_vals, angle_vals, 'b-', label="Angle (degrees)")
         ax1.plot(x_vals, commanded_vals, 'r--', label="Commanded Speed")
-        ax1.set_title("Motor Angle and Command")
+        ax1.set_title("Command")
         ax1.set_ylabel("Values")
         ax1.legend()
         ax1.grid(True)
-        
-        # Plot angular rate
-        ax2.plot(x_vals, rate_vals, 'g-', label="Angular Rate (deg/s)")
-        ax2.set_title("Angular Rate")
-        ax2.set_xlabel("Time (s)")
-        ax2.set_ylabel("Degrees/second")
+
+        ax2.plot(x_vals, angle_vals, 'b-', label="Angle (degrees)")
+        ax2.set_title("Motor Angle")
+        ax2.set_ylabel("Values")
         ax2.legend()
         ax2.grid(True)
+        
+        # Plot angular rate
+        ax3.plot(x_vals, rate_vals, 'g-', label="Angular Rate (deg/s)")
+        ax3.set_title("Angular Rate")
+        ax3.set_xlabel("Time (s)")
+        ax3.set_ylabel("Degrees/second")
+        ax3.legend()
+        ax3.grid(True)
+
+        # Plot position
+        ax4.plot(x_vals, pos_vals, 'g-')
+        ax4.set_title("Position (m)")
+        ax4.set_xlabel("Time (s)")
+        ax4.set_ylabel("(m)")
+        ax4.grid(True)
+
+        # Plot velocity
+        ax5.plot(x_vals, vel_vals, 'g-')
+        ax5.set_title("Velocty (m/s)")
+        ax5.set_xlabel("Time (s)")
+        ax5.set_ylabel("(m/s)")
+        ax5.grid(True)
+
         
         plt.tight_layout()
         timestamp = time.strftime("%Y%m%d_%H%M%S")
