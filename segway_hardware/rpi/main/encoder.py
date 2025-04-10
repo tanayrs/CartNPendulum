@@ -1,36 +1,30 @@
-import RPi.GPIO as GPIO
-import math
+from gpiozero import RotaryEncoder
+import time
 
-class Encoder:
-    def __init__(self, pin_a=23, pin_b=24):
-        self.pin_a = pin_a
-        self.pin_b = pin_b
-        self.value = 0
-        self.last_encoded = 0
+class EncoderAngle:
+    def __init__(self, pin_a=23, pin_b=24, ppr=300.8):
+        # Create encoder with no max_steps for continuous rotation
+        self.encoder = RotaryEncoder(pin_a, pin_b, max_steps=0)
+        self.ppr = ppr  # Pulses Per Revolution
+        self.prev_steps = 0
+        self.prev_time = time.time()
         
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(pin_b, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    def get_angle(self):
+        # Convert steps to degrees
+        return 360.0 / self.ppr * self.encoder.steps
         
-        GPIO.add_event_detect(pin_a, GPIO.BOTH, callback=self.update)
-        GPIO.add_event_detect(pin_b, GPIO.BOTH, callback=self.update)
-
-    def update(self, channel):
-        a = GPIO.input(self.pin_a)
-        b = GPIO.input(self.pin_b)
-        encoded = (a << 1) | b
-        diff = (encoded - self.last_encoded) & 0x03
+    def get_rate(self):
+        # Calculate angular velocity in degrees/second
+        current_time = time.time()
+        current_steps = self.encoder.steps
+        dt = current_time - self.prev_time
         
-        if diff == 0x03 or diff == 0x01:
-            self.value -= 1
-        elif diff == 0x02 or diff == 0x00:
-            self.value += 1
+        if dt > 0:
+            step_diff = current_steps - self.prev_steps
+            rate = (step_diff * 360.0 / self.ppr) / dt
             
-        self.last_encoded = encoded
-
-    def get_count(self):
-        return self.value
-
-    def reset(self):
-        self.value = 0
+            self.prev_steps = current_steps
+            self.prev_time = current_time
+            return rate
+        return 0.0
 

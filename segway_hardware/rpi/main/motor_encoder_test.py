@@ -1,16 +1,19 @@
 import time
 import matplotlib.pyplot as plt
 from motor import HardwarePWMMotor
-from encoder import Encoder
+# Choose one of the implementations from above
+from encoder import EncoderAngle
 
-def motor_encoder_test():
+def directional_encoder_test():
     # Initialize hardware
     motor = HardwarePWMMotor(pwm_pin=18, dir_pin=16)
-    encoder = Encoder()
+    motor.current_speed = 0  # Add this attribute if not already present
+    encoder = EncoderAngle(pin_a=23, pin_b=24)
     
     # Data for plotting
     x_vals = []
-    encoder_vals = []
+    angle_vals = []
+    rate_vals = []
     commanded_vals = []
     
     start_time = time.time()
@@ -19,43 +22,58 @@ def motor_encoder_test():
         # Test sequence
         phases = [
             (20000, "Forward", 2),
-            (-20000, "Reverse", 4),
+            (0, "Stopped", 3),
+            (-20000, "Reverse", 5),
             (0, "Stopped", 6)
         ]
         
-        print("Starting integrated motor/encoder test...")
+        print("Starting encoder direction test...")
         
-        while time.time() - start_time < 6:  # Total test duration
+        while time.time() - start_time < 6:
             elapsed = time.time() - start_time
             
-            # Update motor phase based on elapsed time
+            # Update motor phase
             for speed, label, trigger_time in phases:
                 if elapsed < trigger_time:
-                    if motor.current_speed != speed:  # Use current_speed to track state
+                    if motor.current_speed != speed:
                         print(f"Entering {label} phase")
                         motor.set_speed(speed)
+                        motor.current_speed = speed
                     break
             
-            # Log data for plotting
-            encoder_count = encoder.get_count()
+            # Update data
+            angle = encoder.get_angle()
+            rate = encoder.get_rate()
+            
             x_vals.append(elapsed)
-            encoder_vals.append(encoder_count)
+            angle_vals.append(angle)
+            rate_vals.append(rate)
             commanded_vals.append(motor.current_speed)
             
         print("Test complete - saving plot...")
         
-        # Save plot as an image file
-        plt.figure(figsize=(10, 6))
-        plt.plot(x_vals, encoder_vals, label="Encoder Count", color="blue")
-        plt.plot(x_vals, commanded_vals, label="Commanded Speed", color="red", linestyle="--")
-        plt.title("Motor/Encoder Test")
-        plt.xlabel("Time (s)")
-        plt.ylabel("Values")
-        plt.legend()
-        plt.grid(True)
+        # Create plot with two subplots
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
         
+        # Plot angle and commanded speed
+        ax1.plot(x_vals, angle_vals, 'b-', label="Angle (degrees)")
+        ax1.plot(x_vals, commanded_vals, 'r--', label="Commanded Speed")
+        ax1.set_title("Motor Angle and Command")
+        ax1.set_ylabel("Values")
+        ax1.legend()
+        ax1.grid(True)
+        
+        # Plot angular rate
+        ax2.plot(x_vals, rate_vals, 'g-', label="Angular Rate (deg/s)")
+        ax2.set_title("Angular Rate")
+        ax2.set_xlabel("Time (s)")
+        ax2.set_ylabel("Degrees/second")
+        ax2.legend()
+        ax2.grid(True)
+        
+        plt.tight_layout()
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        filename = f"plots/motor_encoder_test_{timestamp}.png"
+        filename = f"plots/encoder_direction_test_{timestamp}.png"
         plt.savefig(filename)
         print(f"Plot saved as {filename}")
 
@@ -66,5 +84,5 @@ def motor_encoder_test():
         print("Test complete")
 
 if __name__ == "__main__":
-    motor_encoder_test()
+    directional_encoder_test()
 
