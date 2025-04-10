@@ -5,6 +5,7 @@ import time
 class HardwarePWMMotor:
     def __init__(self, pwm_pin=18, dir_pin=16, 
                  pwm_range=40000, pwm_freq=20000):
+        self.current_speed = 0
         self.pwm_pin = pwm_pin
         self.dir_pin = dir_pin
         self.pwm_range = pwm_range
@@ -21,6 +22,7 @@ class HardwarePWMMotor:
         self.stop()
 
     def set_speed(self, speed):
+        self.current_speed = speed
         if speed < 0:
             GPIO.output(self.dir_pin, GPIO.LOW)
             speed = abs(speed)
