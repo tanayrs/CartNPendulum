@@ -19,7 +19,7 @@ class MPU6050:
     ACCEL_SCALE_FACTOR = 16384.0  # for ±2g range
     GYRO_SCALE_FACTOR = 131.0     # for ±250°/s range
     
-    def __init__(self, address=0x68, bus_num=1):
+    def __init__(self, roll_offset=0.0, address=0x68, bus_num=1):
         """Initialize the MPU6050 sensor"""
         self.address = address
         self.bus = smbus.SMBus(bus_num)
@@ -30,9 +30,12 @@ class MPU6050:
         
         self.acc_angle_x, self.acc_angle_y = 0.0, 0.0
         self.roll, self.pitch, self.yaw = 0.0, 0.0, 0.0
-        
-        self.acc_error_x, self.acc_error_y = 0.0, 0.0
-        self.gyro_error_x, self.gyro_error_y, self.gyro_error_z = 0.0, 0.0, 0.0
+
+        self.acc_error_x, self.acc_error_y = -0.04, -8.34
+        self.gyro_error_x, self.gyro_error_y, self.gyro_error_z = -3.82, -1.39, 0.31
+
+        # Roll offset is angle measured when bot is "balanced"
+        self.roll_offset = roll_offset
         
         self.elapsed_time, self.current_time, self.previous_time = 0.0, 0.0, 0.0
         self.current_time = time.time() * 1000  # Initialize current_time
@@ -200,13 +203,13 @@ class MPU6050:
         
         # For yaw, we can only use gyroscope as accelerometer cannot provide yaw information
         self.yaw += self.gyro_z * self.elapsed_time
-        
+
         # Optionally reset yaw to 0 if needed
         # self.yaw = 0  # Uncomment if you want to reset yaw
         
         return {
             'accel': {'x': self.acc_x, 'y': self.acc_y, 'z': self.acc_z},
             'gyro': {'x': self.gyro_x, 'y': self.gyro_y, 'z': self.gyro_z},
-            'angle': {'roll': self.roll + 2.16, 'pitch': self.pitch, 'yaw': self.yaw},
+            'angle': {'roll': self.roll - self.roll_offset, 'pitch': self.pitch, 'yaw': self.yaw},
             'temp': self.read_temp()
         }

@@ -22,6 +22,9 @@ class TiltController:
         self.integral = max(min(self.integral, 20), -20)
         
         output = (self.Kp * error) + (self.Ki * self.integral) - (self.Kd * gyro_rate)
+
+        if abs(current_angle) > 20:
+            output = 0
         
         self.prev_time = now
         

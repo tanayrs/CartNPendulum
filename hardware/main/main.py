@@ -16,14 +16,12 @@ signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     # Hardware initialization
-    imu = MPU6050()
+    imu = MPU6050(roll_offset=1.5)
     motor = HardwarePWMMotor()
     encoder = EncoderAngle(pin_a=23, pin_b=24)
-    controller = TiltController(Kp=4500.0, Ki=0.0, Kd=78)
+    controller = TiltController(Kp=5000.0, Ki=0.0, Kd=0)
     logger = DataLogger()
 
-    # Calibrate IMU for accurate readings
-    imu.calibrate()
     logger.start()
 
     # Timing variables for logging every 100 ms
@@ -88,6 +86,9 @@ if __name__ == "__main__":
 
     except Exception as e:
         print(f"Critical Error: {e}")
+
+    except KeyboardInterrupt:
+        print(f"Completed Balancing")
 
     finally:
         motor.cleanup()
