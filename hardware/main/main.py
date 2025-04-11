@@ -20,7 +20,7 @@ if __name__ == "__main__":
     imu = MPU6050()
     motor = HardwarePWMMotor()
     encoder = EncoderAngle(pin_a=23, pin_b=24)
-    controller = TiltController(Kp=4000.0, Ki=0.0, Kd=78)
+    controller = TiltController(Kp=4500.0, Ki=0.0, Kd=78)
     logger = DataLogger()
 
     # Calibrate IMU for accurate readings
