@@ -3,7 +3,6 @@ from motor import HardwarePWMMotor
 from encoder import EncoderAngle
 from controller import TiltController
 from logger import DataLogger
-
 import time
 import signal
 import sys
@@ -25,7 +24,6 @@ if __name__ == "__main__":
 
     # Calibrate IMU for accurate readings
     imu.calibrate()
-
     logger.start()
 
     # Timing variables for logging every 100 ms
@@ -36,51 +34,61 @@ if __name__ == "__main__":
         while True:
             start_time = time.time()
 
-            # Update IMU data
-            imu_data = imu.update()
+            try:
+                # Update IMU data
+                imu_data = imu.update()
 
-            # Ensure valid IMU readings
-            roll_angle = imu_data['angle']['roll']
-            pitch_angle = imu_data['angle']['pitch']
-            gyro_rate_x = imu_data['gyro']['x']
+                # Ensure valid IMU readings
+                roll_angle = imu_data['angle']['roll']
+                pitch_angle = imu_data['angle']['pitch']
+                gyro_rate_x = imu_data['gyro']['x']
 
-            if roll_angle is None or pitch_angle is None:
-                print("Error: IMU returned invalid data")
-                continue
+                if roll_angle is None or pitch_angle is None:
+                    print("Error: IMU returned invalid data")
+                    continue
 
-            # Update encoder data
-            angle = encoder.get_angle()
-            rate = encoder.get_rate()
+                # Update encoder data
+                angle = encoder.get_angle()
+                rate = encoder.get_rate()
 
-            # Control calculation using roll angle and gyro rate
-            control_output = controller.update(
-                current_angle=roll_angle,
-                gyro_rate=gyro_rate_x)
+                # Control calculation using roll angle and gyro rate
+                control_output = controller.update(
+                    current_angle=roll_angle,
+                    gyro_rate=gyro_rate_x
+                )
 
-            # Actuation: Set motor speed based on control output
-            motor.set_speed(control_output)
+                # Actuation: Set motor speed based on control output
+                motor.set_speed(control_output)
 
-            # Log data every 100 ms
-            current_time = time.time()
-            if current_time - last_log_time >= log_interval:
-                logger.log({
-                    'roll': roll_angle,
-                    'pitch': pitch_angle,
-                    'output': control_output,
-                    'speed': rate  # Log angular rate instead of raw count
-                })
-                last_log_time = current_time
+                # Log data every 100 ms
+                current_time = time.time()
+                if current_time - last_log_time >= log_interval:
+                    logger.log({
+                        'roll': roll_angle,
+                        'pitch': pitch_angle,
+                        'output': control_output,
+                        'speed': rate  # Log angular rate instead of raw count
+                    })
+                    last_log_time = current_time
 
-            # Timing control to maintain loop time 400ms (changed to fix I/O error
+            except IOError as e:
+                print(f"I/O Error: {e}")
+                # Reset motor and flush communication buffers in case of error
+                motor.stop()
+                encoder.encoder.steps = 0  # Reset encoder steps
+
+            except Exception as e:
+                print(f"Unexpected Error: {e}")
+
+            # Timing control to maintain loop time of 40ms (25Hz)
             elapsed = time.time() - start_time
             loop_time = 0.04
             if elapsed < loop_time:
                 time.sleep(loop_time - elapsed)
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Critical Error: {e}")
 
     finally:
         motor.cleanup()
         logger.stop()
-
