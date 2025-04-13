@@ -16,10 +16,10 @@ signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     # Hardware initialization
-    imu = MPU6050(roll_offset=1.5)
+    imu = MPU6050(roll_offset=-1)
     motor = HardwarePWMMotor()
     encoder = EncoderAngle(pin_a=23, pin_b=24)
-    controller = TiltController(Kp=5000.0, Ki=0.0, Kd=0)
+    controller = TiltController(Kp=5500.0, Ki=0.0, Kd=-20)
     logger = DataLogger()
 
     logger.start()
@@ -78,9 +78,9 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"Unexpected Error: {e}")
 
-            # Timing control to maintain loop time of 40ms (25Hz)
+            # Timing control to maintain loop time of 25ms (40Hz)
             elapsed = time.time() - start_time
-            loop_time = 0.04
+            loop_time = 0.025
             if elapsed < loop_time:
                 time.sleep(loop_time - elapsed)
 
