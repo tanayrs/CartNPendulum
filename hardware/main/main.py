@@ -1,11 +1,24 @@
+# Add to imports
+import os
+import time
 from imu import MPU6050
 from motor import HardwarePWMMotor
 from encoder import EncoderAngle
 from controller import TiltController
 from logger import DataLogger
-import time
 import signal
 import sys
+
+# Configure real-time scheduling BEFORE other imports
+os.nice(-20)  # Highest priority
+try:
+    param = os.sched_param(os.sched_get_priority_max(os.SCHED_FIFO))
+    os.sched_setscheduler(0, os.SCHED_FIFO, param)
+except PermissionError:
+    print("Run with sudo for real-time scheduling")
+
+# Pin process to CPU core 3 (isolated core)
+os.sched_setaffinity(0, {3})
 
 def signal_handler(sig, frame):
     motor.cleanup()
@@ -14,82 +27,44 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-if __name__ == "__main__":
-    # Hardware initialization
-    imu = MPU6050(roll_offset=-1)
-    motor = HardwarePWMMotor()
-    encoder = EncoderAngle(pin_a=23, pin_b=24)
-    controller = TiltController(Kp=5500.0, Ki=0.0, Kd=-20)
-    logger = DataLogger()
 
-    logger.start()
+# Hardware initialization
+imu = MPU6050(roll_offset=-1)
+motor = HardwarePWMMotor()
+encoder = EncoderAngle(pin_a=23, pin_b=24)
+controller = TiltController(Kp=5500.0, Ki=0.0, Kd=-20)
+logger = DataLogger()
 
-    # Timing variables for logging every 100 ms
-    log_interval = 0.1  # 100 ms interval
-    last_log_time = time.time()
+logger.start()
 
-    try:
-        while True:
-            start_time = time.time()
+# Timing variables for logging every 100 ms
+log_interval = 0.1  # 100 ms interval
+last_log_time = time.time()
+# Modify main loop timing section
+try:
+    while True:
+        loop_start = time.monotonic()  # Monotonic clock for precision
+        
+        # --- Control logic (keep this under 8ms) ---
+        imu_data = imu.update()
+        roll_angle = imu_data['angle']['roll']
+        gyro_rate_x = imu_data['gyro']['x']
+        angle = encoder.get_angle()
+        control_output = controller.update(roll_angle, gyro_rate_x)
+        motor.set_speed(control_output)
+        # -------------------------------------------
+        
+        # Busy-wait for precise timing
+        while (time.monotonic() - loop_start) < 0.01:  # 10ms
+            pass
 
-            try:
-                # Update IMU data
-                imu_data = imu.update()
+except KeyboardInterrupt:
+    motor.cleanup()
+    logger.stop()
 
-                # Ensure valid IMU readings
-                roll_angle = imu_data['angle']['roll']
-                pitch_angle = imu_data['angle']['pitch']
-                gyro_rate_x = imu_data['gyro']['x']
+except IOError as e:
+    print(f"I/O Error: {e}")
+    # Reset motor and flush communication buffers in case of error
+    motor.stop()
+    encoder.encoder.steps = 0  # Reset encoder steps
 
-                if roll_angle is None or pitch_angle is None:
-                    print("Error: IMU returned invalid data")
-                    continue
-
-                # Update encoder data
-                angle = encoder.get_angle()
-                rate = encoder.get_rate()
-
-                # Control calculation using roll angle and gyro rate
-                control_output = controller.update(
-                    current_angle=roll_angle,
-                    gyro_rate=gyro_rate_x
-                )
-
-                # Actuation: Set motor speed based on control output
-                motor.set_speed(control_output)
-
-                # Log data every 100 ms
-                current_time = time.time()
-                if current_time - last_log_time >= log_interval:
-                    logger.log({
-                        'roll': roll_angle,
-                        'pitch': pitch_angle,
-                        'output': control_output,
-                        'speed': rate  # Log angular rate instead of raw count
-                    })
-                    last_log_time = current_time
-
-            except IOError as e:
-                print(f"I/O Error: {e}")
-                # Reset motor and flush communication buffers in case of error
-                motor.stop()
-                encoder.encoder.steps = 0  # Reset encoder steps
-
-            except Exception as e:
-                print(f"Unexpected Error: {e}")
-
-            # Timing control to maintain loop time of 25ms (40Hz)
-            elapsed = time.time() - start_time
-            loop_time = 0.025
-            if elapsed < loop_time:
-                time.sleep(loop_time - elapsed)
-
-    except Exception as e:
-        print(f"Critical Error: {e}")
-
-    except KeyboardInterrupt:
-        print(f"Completed Balancing")
-
-    finally:
-        motor.cleanup()
-        logger.stop()
