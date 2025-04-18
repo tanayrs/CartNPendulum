@@ -56,9 +56,9 @@ while running:  # Use flag instead of True
 
         # --- Control logic (keep this under 8ms) ---
         motor.set_speed(triangle_input)
-        triangle_input += sign_input*10
+        triangle_input += sign_input*50
 
-        sign_input = -sign_input if abs(triangle_input) >= 10000 else sign_input
+        sign_input = -sign_input if abs(triangle_input) >= 50000 else sign_input
 
         # -------------------------------------------
 
@@ -99,7 +99,7 @@ plt.title('Encoder Ticks vs Time')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('encoder_ticks_vs_time.png')
+plt.savefig('encoder_ticks_vs_time_2.png')
 
 print(f'Saved Figure')
 
