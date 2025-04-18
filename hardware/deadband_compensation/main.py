@@ -42,6 +42,7 @@ processor = EncoderProcessor(pulses_per_rev=2262)
 ticks = []
 times = []
 inputs = []
+velocities = []
 
 while running:  # Use flag instead of True
     try:
@@ -53,12 +54,13 @@ while running:  # Use flag instead of True
         ticks.append(raw_ticks)
         times.append(loop_start)
         inputs.append(triangle_input)
+        velocities.append(processor.get_speed())
 
         # --- Control logic (keep this under 8ms) ---
         motor.set_speed(triangle_input)
-        triangle_input += sign_input*50
+        triangle_input += sign_input*10
 
-        sign_input = -sign_input if abs(triangle_input) >= 50000 else sign_input
+        sign_input = -sign_input if abs(triangle_input) >= 10000 else sign_input
 
         # -------------------------------------------
 
@@ -92,7 +94,7 @@ plt.ylabel('Input')
 plt.grid()
 
 plt.subplot(2,1,2)
-plt.plot(times_zeroed, ticks, label='Encoder Ticks', color='cyan', linewidth=2)
+plt.plot(times_zeroed, velocities, label='Encoder Ticks', color='cyan', linewidth=2)
 plt.xlabel('Time (seconds)')
 plt.ylabel('Ticks')
 plt.title('Encoder Ticks vs Time')
