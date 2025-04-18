@@ -29,10 +29,10 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 # Hardware initialization
-imu = MPU6050(roll_offset=-1)
+imu = MPU6050(roll_offset=0.3)
 motor = HardwarePWMMotor()
 encoder = EncoderAngle(pin_a=23, pin_b=24)
-controller = TiltController(Kp=5500.0, Ki=0.0, Kd=-20)
+controller = TiltController(Kp=5000.0, Ki=10.0, Kd=-10)
 logger = DataLogger()
 
 logger.start()
@@ -43,28 +43,33 @@ last_log_time = time.time()
 # Modify main loop timing section
 try:
     while True:
-        loop_start = time.monotonic()  # Monotonic clock for precision
+        try: 
+            loop_start = time.monotonic()  # Monotonic clock for precision
         
-        # --- Control logic (keep this under 8ms) ---
-        imu_data = imu.update()
-        roll_angle = imu_data['angle']['roll']
-        gyro_rate_x = imu_data['gyro']['x']
-        angle = encoder.get_angle()
-        control_output = controller.update(roll_angle, gyro_rate_x)
-        motor.set_speed(control_output)
-        # -------------------------------------------
+            # --- Control logic (keep this under 8ms) ---
+            imu_data = imu.update()
+            roll_angle = imu_data['angle']['roll']
+            gyro_rate_x = imu_data['gyro']['x']
+            angle = encoder.get_angle()
+            control_output = controller.update(roll_angle, gyro_rate_x)
+            motor.set_speed(control_output)
+            # -------------------------------------------
+
+            print(f'{roll_angle=}')
         
-        # Busy-wait for precise timing
-        while (time.monotonic() - loop_start) < 0.01:  # 10ms
-            pass
+            # Busy-wait for precise timing
+            while (time.monotonic() - loop_start) < 0.01:  # 10ms
+                time.sleep(0.0001)
 
-except KeyboardInterrupt:
-    motor.cleanup()
-    logger.stop()
+        except KeyboardInterrupt:
+            motor.cleanup()
+            logger.stop()
 
-except IOError as e:
-    print(f"I/O Error: {e}")
-    # Reset motor and flush communication buffers in case of error
-    motor.stop()
-    encoder.encoder.steps = 0  # Reset encoder steps
+        except IOError as e:
+            print(f"I/O Error: {e}")
+            # Reset motor and flush communication buffers in case of error
+            motor.stop()
+            encoder.encoder.steps = 0  # Reset encoder steps
 
+except:
+    pass
