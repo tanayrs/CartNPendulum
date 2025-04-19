@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 # Sample CSV data (copy your actual data here)
-csv_files = './deadband_test_2025-04-19 12:37:43.183066.csv' 
+csv_file = './data/deadband_test_2025-04-19 12:37:43.183066.csv' 
 
 # Parse the CSV data
 df = pd.read_csv(csv_file)
@@ -51,7 +51,6 @@ ax1.legend()
 for i, window_size in enumerate(window_sizes):
     column_name = f'window_{window_size}'
     ax = plt.subplot(gs[i+1, 0])
-    ax.plot(df.index, df['noisy_velocity'], label='Original Velocity', color='blue', alpha=0.5)
     ax.plot(df.index, df[column_name], label=f'Window Size {window_size}', 
             color=['green', 'orange', 'red', 'purple'][i])
     ax.set_title(f'Original vs. Window Size {window_size}')
@@ -72,7 +71,6 @@ ax_all.grid(True)
 ax_all.legend()
 
 plt.tight_layout()
-plt.savefig('velocity_filtering.png', dpi=300)
 plt.show()
 
 # Print data summary to verify calculations
@@ -80,4 +78,4 @@ print(df[['time', 'ticks', 'position', 'noisy_velocity'] +
        [f'window_{size}' for size in window_sizes]].head(10))
 
 # Save the filtered data to CSV if needed
-df.to_csv('filtered_velocity_data.csv', index=True)
+df.to_csv('data/filtered_velocity_data.csv', index=True)
