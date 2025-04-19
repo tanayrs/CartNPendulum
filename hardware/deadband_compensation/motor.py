@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import pigpio
 
 class HardwarePWMMotor:
-    def __init__(self, pwm_pin=18, dir_pin=16, pwm_range=40000, pwm_freq=20000):
+    def __init__(self, pwm_pin=18, dir_pin=16, pwm_range=40000, pwm_freq=20000, static_inc = 1614, kinetic_inc=-1499, static_dec=-1605, kinetic_dec=1497):
         self.current_speed = 0
         self.pwm_pin = pwm_pin
         self.dir_pin = dir_pin
@@ -19,7 +19,7 @@ class HardwarePWMMotor:
         self.pi.set_PWM_range(pwm_pin, pwm_range)
         self.stop()
 
-    def set_speed(self, speed):
+    def set_speed(self, speed, prev_vel):
         try:
             self.current_speed = speed
             if speed < 0:
@@ -27,6 +27,15 @@ class HardwarePWMMotor:
                 speed = abs(speed)
             else:
                 GPIO.output(self.dir_pin, GPIO.HIGH)
+
+            if prev_vel == 0 and speed > 0:
+                speed += self.static_inc
+            elif prev_vel > 0 and speed > 0:
+                speed += self.kinetic_dec
+            elif prev_vel == 0 and speed < 0:
+                speed += self.static_dec
+            elif prev_vel < 0 and speed < 0:
+                speed += self.kinetic_inc
 
             duty_cycle = min(int(speed), self.pwm_range)
             self.pi.set_PWM_dutycycle(self.pwm_pin, duty_cycle)
