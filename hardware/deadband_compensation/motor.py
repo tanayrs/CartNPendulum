@@ -8,6 +8,11 @@ class HardwarePWMMotor:
         self.dir_pin = dir_pin
         self.pwm_range = pwm_range
 
+        self.static_inc = static_inc
+        self.kinetic_inc = kinetic_inc
+        self.static_dec = static_dec
+        self.kinetic_dec = kinetic_dec
+
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(dir_pin, GPIO.OUT)
 
@@ -28,13 +33,13 @@ class HardwarePWMMotor:
             else:
                 GPIO.output(self.dir_pin, GPIO.HIGH)
 
-            if prev_vel == 0 and speed > 0:
+            if prev_vel == 0.0 and speed > 0:
                 speed += self.static_inc
-            elif prev_vel > 0 and speed > 0:
+            elif abs(prev_vel) > 0 and speed > 0:
                 speed += self.kinetic_dec
-            elif prev_vel == 0 and speed < 0:
+            elif prev_vel == 0.0 and speed < 0:
                 speed += self.static_dec
-            elif prev_vel < 0 and speed < 0:
+            elif abs(prev_vel) > 0 and speed < 0:
                 speed += self.kinetic_inc
 
             duty_cycle = min(int(speed), self.pwm_range)

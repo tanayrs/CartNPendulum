@@ -59,7 +59,7 @@ while running:  # Use flag instead of True
         velocities.append(processor.get_speed())
 
         # --- Control logic (keep this under 8ms) ---
-        motor.set_speed(triangle_input)
+        motor.set_speed(triangle_input, velocities[-1])
         triangle_input += sign_input*10
 
         sign_input = -sign_input if abs(triangle_input) >= 10000 else sign_input
