@@ -6,6 +6,8 @@ from encoder import PiEncoder, EncoderProcessor
 import signal
 import sys
 import matplotlib.pyplot as plt
+import pandas as pd
+import datetime
 
 triangle_input = -1000
 sign_input = -1
@@ -101,7 +103,18 @@ plt.title('Encoder Ticks vs Time')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('encoder_ticks_vs_time_2.png')
+
+time = datetime.datetime.now()
+plt.savefig(f'plot_{time}.png')
 
 print(f'Saved Figure')
 
+df = pd.DataFrame(columns=['time','input','ticks','velocity'])
+df['time'] = times
+df['input'] = inputs
+df['ticks'] = ticks
+df['velocity'] = velocities
+
+df.to_csv(f'./deadband_test_{time}.csv')
+
+print('Saved CSV')
