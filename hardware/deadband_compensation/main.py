@@ -105,7 +105,7 @@ plt.grid(True)
 plt.tight_layout()
 
 time = datetime.datetime.now()
-plt.savefig(f'plot_{time}.png')
+plt.savefig(f'plots/plot_{time}.png')
 
 print(f'Saved Figure')
 
@@ -115,6 +115,6 @@ df['input'] = inputs
 df['ticks'] = ticks
 df['velocity'] = velocities
 
-df.to_csv(f'./deadband_test_{time}.csv')
+df.to_csv(f'./data/deadband_test_{time}.csv')
 
 print('Saved CSV')
