@@ -91,12 +91,12 @@ else:
 
 plt.figure(figsize=(10, 6))
 plt.subplot(2,1,1)
-plt.scatter(times_zeroed, inputs, label='Motor Input', color='cyan')
+plt.scatter(times_zeroed, inputs, label='Motor Input', s=10)
 plt.ylabel('Input')
 plt.grid()
 
 plt.subplot(2,1,2)
-plt.scatter(times_zeroed, velocities, label='Velocity', color='cyan')
+plt.scatter(times_zeroed, velocities, label='Velocity', s=10)
 plt.xlabel('Time (seconds)')
 plt.ylabel('Velocity (deg/s)')
 plt.title('Velocity vs Time')
