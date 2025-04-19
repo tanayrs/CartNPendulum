@@ -35,11 +35,11 @@ class HardwarePWMMotor:
 
             if prev_vel == 0.0 and speed > 0:
                 speed += self.static_inc
-            elif abs(prev_vel) > 0 and speed > 0:
+            elif prev_vel != 0 and speed > 0:
                 speed += self.kinetic_dec
             elif prev_vel == 0.0 and speed < 0:
                 speed += self.static_dec
-            elif abs(prev_vel) > 0 and speed < 0:
+            elif prev_vel != 0 and speed < 0:
                 speed += self.kinetic_inc
 
             duty_cycle = min(int(speed), self.pwm_range)
