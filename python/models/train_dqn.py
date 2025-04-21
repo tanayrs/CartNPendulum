@@ -24,7 +24,7 @@ import env.custom_cartpole
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="env.custom_cartpole:CustomCartPoleEnv",  # ensure this matches your class name
+        entry_point="env.custom_cartpole1:CartPoleEnv1",  # ensure this matches your class name
     )
 except gym.error.Error as e:
     if "already registered" in str(e):
