@@ -33,7 +33,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Hardware initialization
-motor = HardwarePWMMotor()
+motor = HardwarePWMMotor(static_inc=0, kinetic_inc=0, static_dec=0, kinetic_dec=0)
 
 # Initialize hardware encoder
 encoder = PiEncoder(pin_a=23, pin_b=24)
