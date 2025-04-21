@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import pigpio
 
 class HardwarePWMMotor:
-    def __init__(self, pwm_pin=18, dir_pin=16, pwm_range=40000, pwm_freq=20000, static_inc = 1614, kinetic_inc=-1499, static_dec=-1605, kinetic_dec=1497):
+    def __init__(self, pwm_pin=18, dir_pin=16, pwm_range=40000, pwm_freq=20000, static_inc = 1604, kinetic_inc=-1544, static_dec=-1786, kinetic_dec=1495):
         self.current_speed = 0
         self.pwm_pin = pwm_pin
         self.dir_pin = dir_pin
