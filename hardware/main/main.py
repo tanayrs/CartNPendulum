@@ -58,13 +58,18 @@ try:
             x = processor.get_position_meters() #
             x_dot = processor.get_speed_ms() #
             
-            #---- didnt delete cuz wasn't sure
+            
             imu_data = imu.update()
             roll_angle = imu_data['angle']['roll']
             gyro_rate_x = imu_data['gyro']['x']
-            #angle = encoder.get_angle()
-            
+           
+            dts = datetime.datetime.now() ## 
             control_output = controller.update(roll_angle, gyro_rate_x)
+            dte = datetime.datetime.now() ##
+            time4ctrlout = dte-dts
+            s =(time4ctrlout.total_seconds())
+            ms = round(s*1000)
+            
             data = {'x':x,
                     'x_dot':x_dot,
                     'theta':roll_angle,
