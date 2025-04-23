@@ -38,7 +38,7 @@ encoder = PiEncoder(pin_a=23, pin_b=24)
 # Initialize data processor
 processor = EncoderProcessor(pulses_per_rev=2262)
 
-controller = TiltController(Kp=5000.0, Ki=10.0, Kd=-10)
+controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)
 logger = DataLogger()
 
 logger.start()
@@ -57,7 +57,6 @@ try:
             processor.update(ticks) #
             x = processor.get_position_meters() #
             x_dot = processor.get_speed_ms() #
-            #logger.log() #
             
             #---- didnt delete cuz wasn't sure
             imu_data = imu.update()
@@ -71,8 +70,10 @@ try:
                     'theta':roll_angle,
                     'theta_dot':gyro_rate_x,
                     'control_output':control_output}
-            motor.set_speed(control_output)
+            motor.set_speed(control_output, x_dot)
+            print('Checkpoint 1')
             logger.log(data)
+            print('Checkpoint 2')
             # -------------------------------------------
 
             print(f'{roll_angle=}')
@@ -89,7 +90,6 @@ try:
             print(f"I/O Error: {e}")
             # Reset motor and flush communication buffers in case of error
             motor.stop()
-            encoder.encoder.steps = 0  # Reset encoder steps
-
-except:
+except Exception as e:
+    print(e)
     pass
