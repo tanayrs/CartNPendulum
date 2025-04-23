@@ -3,7 +3,7 @@ import os
 import time
 from imu import MPU6050
 from motor import HardwarePWMMotor
-from encoder import EncoderAngle
+from encoder import EncoderProcessor, PiEncoder #
 from controller import TiltController
 from logger import DataLogger
 import signal
@@ -31,7 +31,9 @@ signal.signal(signal.SIGINT, signal_handler)
 # Hardware initialization
 imu = MPU6050(roll_offset=0.3)
 motor = HardwarePWMMotor()
-encoder = EncoderAngle(pin_a=23, pin_b=24)
+
+# PiEncoder pins where toput
+encoder = EncoderProcessor() #
 controller = TiltController(Kp=5000.0, Ki=10.0, Kd=-10)
 logger = DataLogger()
 
@@ -47,6 +49,13 @@ try:
             loop_start = time.monotonic()  # Monotonic clock for precision
         
             # --- Control logic (keep this under 8ms) ---
+            ticks = encoder.read() #
+            encoder.update(ticks) #
+            x = encoder.get_position_meters() #
+            x_dot = encoder.get_speed_ms() #
+            logger.update() #
+
+            #---- didnt delete cuz wasn't sure
             imu_data = imu.update()
             roll_angle = imu_data['angle']['roll']
             gyro_rate_x = imu_data['gyro']['x']
