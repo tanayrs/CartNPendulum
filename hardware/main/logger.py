@@ -25,13 +25,13 @@ class DataLogger:
         if self.writer:
             self.writer.writerow([
                 datetime.now().isoformat(),
-                data.get('roll', 0),
-                data.get('pitch', 0),
-                data.get('target', 0),
-                data.get('output', 0),
-                data.get('speed', 0)
+                data.get('x', 0),
+                data.get('x_dot', 0),
+                data.get('theta', 0), # roll angle
+                data.get('theta_dot', 0), # gyro rate x
+                data.get('control_output', 0)
             ])
-            print(f"Logged: {datetime.now().isoformat()}, {data.get('roll',0)}, {data.get('pitch', 0)}, {data.get('target', 0)}, {data.get('output', 0)}, {data.get('speed', 0)}, {self.log_file.flush()}")
+            print(f"Logged: {datetime.now().isoformat()}, {data.get('x',0)}, {data.get('x_dot', 0)}, {data.get('theta', 0)}, {data.get('theta_dot', 0)}, {data.get('control_output', 0)}, {self.log_file.flush()}")
             
     def stop(self):
         if self.log_file:
