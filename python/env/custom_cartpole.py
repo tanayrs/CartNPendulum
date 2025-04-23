@@ -2,6 +2,8 @@
 
 import gymnasium as gym
 import numpy as np
+from numpy import sin, cos
+
 # CHANGED: Inherit directly from the built-in CartPoleEnv for baseline functionality.
 from gymnasium.envs.classic_control.cartpole import CartPoleEnv
 
@@ -32,19 +34,47 @@ class CustomCartPoleEnv(CartPoleEnv):
         self.tau = self.p_time_scale     # Use custom time scale for integration.
 
     def step(self, action):
+        print("Custom step method called with action:", action)
         # CHANGED: Redefine the step method to inject custom viscous drag and use the custom parameters.
         x, x_dot, theta, theta_dot = self.state
-        force = self.force_mag if action == 1 else -self.force_mag
 
-        costheta = np.cos(theta)
-        sintheta = np.sin(theta)
+        force = self.p_rated_torque/self.p_R_wheel
+        if theta > 0:
+            force = -self.p_rated_torque/self.p_R_wheel
+        elif theta < 0:
+            force = self.p_rated_torque/self.p_R_wheel
+        else:
+            force = 0
+        
+        action = force
+        # force = self.force_mag if action == 1 else -self.force_mag
+
+        # if force > self.p_rated_torque/self.p_R_wheel:
+        #     force = self.p_rated_torque/self.p_R_wheel
+        # elif force < -self.p_rated_torque/self.p_R_wheel:
+        #     force = -self.p_rated_torque/self.p_R_wheel
+        # CHANGED: Use custom parameters for dynamics calculation.
+
+        # costheta = np.cos(theta)
+        # sintheta = np.sin(theta)
 
         # CHANGED: Added viscous drag effect (self.p_b) into the dynamics computation.
-        temp = (force - self.p_b * x_dot + self.polemass_length * theta_dot**2 * sintheta) / self.total_mass
-        thetaacc = (self.gravity * sintheta - costheta * temp) / (
-            self.length * (4.0 / 3.0 - self.masspole * costheta**2 / self.total_mass)
-        )
-        xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
+        # temp = (force - self.p_b * x_dot + self.polemass_length * theta_dot**2 * sintheta) / self.total_mass
+        # thetaacc = (self.gravity * sintheta - costheta * temp) / (
+        #     self.length * (4.0 / 3.0 - self.masspole * costheta**2 / self.total_mass)
+        # )
+        # xacc = temp - self.polemass_length * thetaacc * costheta / self.total_mass
+
+        d = self.length
+        m = self.masscart
+        g = self.gravity
+        b = self.p_b
+        I = self.p_I
+        # CHANGED: Using the custom parameters for the dynamics calculation.
+
+        xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
+
+        thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta)))/(I + (d**2)*m*(sin(theta)**2))
 
         # CHANGED: Update the state using the custom time scale (tau).
         x = x + self.tau * x_dot
@@ -72,6 +102,8 @@ class CustomCartPoleEnv(CartPoleEnv):
         # CHANGED: Override the reset method to reinitialize state if needed.
         # Calling the parent reset method for basic setup (seed, etc.)
         observation, info = super().reset(seed=seed, options=options)
+
         # CHANGED: Reset our state explicitly; here, we set it to zeros for demonstration.
-        self.state = np.array([0.0, 0.0, 0.0, 0.0])
+        theta = np.random.uniform(low=-0.087, high=0.087) # Randomize initial angle
+        self.state = np.array([0.0, 0.0, theta, 0.0])
         return self.state, info

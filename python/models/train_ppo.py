@@ -21,14 +21,14 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 # ✅ Import your custom environment module from the env folder
-import env.custom_cartpole
+import env.custom_cartpole1
 
 # ✅ Register your custom environment so gymnasium can find it.
 # Make sure the entry point string matches the module path and your class name.
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="env.custom_cartpole:CustomCartPoleEnv",
+        entry_point="env.custom_cartpole1:CartPoleEnv1",
     )
 except gym.error.Error as e:
     # If the environment has already been registered, ignore the error.
@@ -66,7 +66,7 @@ vec_env = DummyVecEnv([lambda: gym.make(environment_name)])
 
 # ✅ Train PPO with the custom environment
 model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=log_path)
-model.learn(total_timesteps=20000)
+model.learn(total_timesteps=100)
 
 # ✅ Save the trained model
 PPO_path = os.path.join("Training", "Saved Models", "PPO_model")
