@@ -58,11 +58,11 @@ except gymnasium.error.Error as e:
 
 # Use absolute paths for model files
 ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model.zip')
-dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model')
+dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
 
 # Import controller after environment registration
 from controller_rl import HardwareModelAgent
-controller_rl = HardwareModelAgent(model_type='PPO', model_path=ppo_model_path, env_name='CustomCartPole-v1')
+controller_rl = HardwareModelAgent(model_type='DQN', model_path=dqn_model_path, env_name='CustomCartPole-v1')
 
 logger = DataLogger()
 logger.start()
