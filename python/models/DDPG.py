@@ -1,3 +1,7 @@
+# MAJOR REWORK NEEDED IGNORE FILE FOR NOW.
+
+
+
 import math
 import random
 import os

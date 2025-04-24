@@ -1,35 +1,34 @@
+# This script creates a custom CartPole environment with modified parameters for our problem.
+# The original CartPole environment is based on the classic control problem where a pole is balanced on a cart.
+# The custom environment allows for more flexibility in the dynamics of the system.
+
 """
 Classic cart-pole system implemented by Rich Sutton et al.
 Copied from http://incompleteideas.net/sutton/book/code/pole.c
 permalink: https://perma.cc/C9ZM-652R
 """
 
+#imports
 import math
 from typing import Optional, Tuple, Union
-
-import numpy as np
 from numpy import sin, cos
-
+import numpy as np
 import gymnasium as gym
 from gymnasium import logger, spaces
 from gymnasium.envs.classic_control import utils
 from gymnasium.error import DependencyNotInstalled
-# from gymnasium.vector import AutoresetMode, VectorEnv
-# from gymnasium.vector.utils import batch_space
+# we removed the import of VectorEnv and AutoresetMode as they are not used in this code, and other VectorEnv related code too
 
 
-class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
+class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     """
-    ## Description
+    Description - NEEDS TO BE REWRITTENFOR OUR WORK
 
-    This environment corresponds to the version of the cart-pole problem described by Barto, Sutton, and Anderson in
-    ["Neuronlike Adaptive Elements That Can Solve Difficult Learning Control Problem"](https://ieeexplore.ieee.org/document/6313077).
     A pole is attached by an un-actuated joint to a cart, which moves along a frictionless track.
     The pendulum is placed upright on the cart and the goal is to balance the pole by applying forces
      in the left and right direction on the cart.
 
     ## Action Space
-
     The action is a `ndarray` with shape `(1,)` which can take values `{0, 1}` indicating the direction
      of the fixed force the cart is pushed with.
 
@@ -37,7 +36,7 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     - 1: Push cart to the right
 
     **Note**: The velocity that is reduced or increased by the applied force is not fixed and it depends on the angle
-     the pole is pointing. The center of gravity of the pole varies the amount of energy needed to move the cart underneath it
+     the pole is pointing. The center of gravity of the pole varies the amount of energy needed to move the cart underneath it - FIND WAY TO STILL CHECK OR THIS ISSUE
 
     ## Observation Space
 
@@ -108,11 +107,11 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
 
     ## Version History
     * v1: `max_time_steps` raised to 500.
-        - In Gymnasium `1.0.0a2` the `sutton_barto_reward` argument was added (related [GitHub issue](https://github.com/Farama-Foundation/Gymnasium/issues/790))
+        - In Gymnasium `1.0.0a2` the `sutton_barto_reward` argument was added
     * v0: Initial versions release.
     """
 
-    metadata = {
+    metadata ={
         "render_modes": ["human", "rgb_array"],
         "render_fps": 24,
     }
@@ -151,8 +150,7 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
         self.x_threshold = 2.4
 
-        # Angle limit set to 2 * theta_threshold_radians so failing observation
-        # is still within bounds.
+        # Angle limit set to 2 * theta_threshold_radians so failing observation, is still within bounds.
         high = np.array(
             [
                 self.x_threshold * 2,
@@ -177,7 +175,6 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         self.clock = None
         self.isopen = True
         self.state: np.ndarray | None = None
-
         self.steps_beyond_terminated = None
 
     def step(self, action):
@@ -199,21 +196,21 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         # CHANGED: Using the custom parameters for the dynamics calculation.
 
         xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
-                (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(
-                    m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
+                (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
 
         thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta)))/(I + (d**2)*m*(sin(theta)**2))
 
-        if self.kinematics_integrator == "euler":
-            x = x + self.tau * x_dot
-            x_dot = x_dot + self.tau * xacc
-            theta = theta + self.tau * theta_dot
-            theta_dot = theta_dot + self.tau * thetaacc
-        else:  # semi-implicit euler
+        if self.kinematics_integrator == "semi-implicit euler":  # semi-implicit euler
             x_dot = x_dot + self.tau * xacc
             x = x + self.tau * x_dot
             theta_dot = theta_dot + self.tau * thetaacc
             theta = theta + self.tau * theta_dot
+        else: # euler
+            x = x + self.tau * x_dot
+            x_dot = x_dot + self.tau * xacc
+            theta = theta + self.tau * theta_dot
+            theta_dot = theta_dot + self.tau * thetaacc
+
 
         self.state = np.array((x, x_dot, theta, theta_dot), dtype=np.float64)
 
@@ -229,7 +226,6 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         elif self.steps_beyond_terminated is None:
             # Pole just fell!
             self.steps_beyond_terminated = 0
-
             reward = -1.0 if self._sutton_barto_reward else 1.0
         else:
             if self.steps_beyond_terminated == 0:
@@ -239,7 +235,7 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
                 )
             self.steps_beyond_terminated += 1
 
-            ##  COMMENT: VANDITA SAYS: EXPLORE REWARD FUNCTIONS ###############################
+            ##  COMMENT: REWARD FUCNTION IMPORTANT
             reward = -1.0 if self._sutton_barto_reward else 0.0
 
         if self.render_mode == "human":
@@ -372,274 +368,3 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             pygame.display.quit()
             pygame.quit()
             self.isopen = False
-
-
-# class CartPoleVectorEnv1(VectorEnv):
-#     metadata = {
-#         "render_modes": ["rgb_array"],
-#         "render_fps": 50,
-#         "autoreset_mode": AutoresetMode.NEXT_STEP,
-#     }
-
-#     def __init__(
-#         self,
-#         num_envs: int = 1,
-#         max_episode_steps: int = 500,
-#         render_mode: Optional[str] = None,
-#         sutton_barto_reward: bool = False,
-#     ):
-        
-#         self._sutton_barto_reward = sutton_barto_reward
-
-#         self.num_envs = num_envs
-#         self.max_episode_steps = max_episode_steps
-#         self.render_mode = render_mode
-
-#         self.state = None
-
-#         self.steps = np.zeros(num_envs, dtype=np.int32)
-#         self.prev_done = np.zeros(num_envs, dtype=np.bool_)
-
-#         # CHANGED: Define custom parameters using MATLAB syntax variable names and values.
-#         self.p_m = 0.841           # kg, mass of the pole
-#         self.p_d = 0.2             # m, distance to center-of-mass (CoM) of the pole
-#         self.p_dw = 0.075          # Custom parameter (e.g., wheel distance)
-#         self.p_R_wheel = 0.05      # m, radius of the wheel
-#         self.p_g = 10              # gravity (m/s^2)
-#         self.p_time_scale = 0.1    # time scale factor for integration
-#         self.p_rated_torque = 25 * self.p_g / 100  # Rated Torque (calculated from gravity)
-#         self.p_rated_force = self.p_rated_torque / self.p_R_wheel
-#         self.Ig = 0                # Mass Moment of Inertia about mass (if applicable)
-#         self.p_I = (self.p_m * (self.p_d ** 2)) + self.Ig  # Total inertia about the center-of-mass
-#         self.p_b = 0.4             # Viscous drag coefficient
-
-#         # CHANGED: Override key parameters of the original Gymnasium CartPole with custom values.
-#         self.gravity = self.p_g          # Set gravity to custom value.
-#         self.masspole = self.p_m         # Use custom pole mass.
-#         self.masscart = 1.0              # Retaining the default cart mass (can be modified if needed).
-#         self.total_mass = self.masspole + self.masscart
-#         self.length = self.p_d           # Use custom length (distance to CoM).
-#         self.polemass_length = self.masspole * self.length
-#         self.tau = self.p_time_scale     # Use custom time scale for integration.
-#         self.force_mag = self.p_rated_force  # Use custom force magnitude
-#         self.tau = 0.01  # seconds between state updates
-#         self.kinematics_integrator = "semi-implicit euler"
-
-#         # Angle at which to fail the episode
-#         self.theta_threshold_radians = 20 * 2 * math.pi / 360
-#         self.x_threshold = 10
-
-#         # Angle limit set to 2 * theta_threshold_radians so failing observation
-#         # is still within bounds.
-#         high = np.array(
-#             [
-#                 self.x_threshold * 2,
-#                 np.inf,
-#                 self.theta_threshold_radians * 2,
-#                 np.inf,
-#             ],
-#             dtype=np.float32,
-#         )
-
-#         self.action_space = spaces.Discrete(11, start=-5)
-#         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
-#         self.single_observation_space = spaces.Box(-high, high, dtype=np.float32)
-        
-#         self.screens = None
-#         self.surf = None
-
-#         self.render_mode = render_mode
-
-#         self.screen_width = 600
-#         self.screen_height = 400
-#         self.screen = None
-#         self.clock = None
-#         self.isopen = True
-#         self.state: np.ndarray | None = None
-
-#         self.steps_beyond_terminated = None
-
-#     def step(
-#         self, action: np.ndarray
-#     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
-#         assert self.action_space.contains(
-#             action
-#         ), f"{action!r} ({type(action)}) invalid"
-#         assert self.state is not None, "Call reset before using step method."
-#         x, x_dot, theta, theta_dot = self.state
-        
-#         force = (self.max_force/5)*action
-
-#         d = self.length
-#         m = self.masscart
-#         g = self.gravity
-#         b = self.p_b
-#         I = self.p_I
-#         # CHANGED: Using the custom parameters for the dynamics calculation.
-
-#         xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
-#                 (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(
-#                     m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
-
-#         thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta)))/(I + (d**2)*m*(sin(theta)**2))
-
-#         if self.kinematics_integrator == "euler":
-#             x = x + self.tau * x_dot
-#             x_dot = x_dot + self.tau * xacc
-#             theta = theta + self.tau * theta_dot
-#             theta_dot = theta_dot + self.tau * thetaacc
-#         else:  # semi-implicit euler
-#             x_dot = x_dot + self.tau * xacc
-#             x = x + self.tau * x_dot
-#             theta_dot = theta_dot + self.tau * thetaacc
-#             theta = theta + self.tau * theta_dot
-
-#         self.state = np.array((x, x_dot, theta, theta_dot), dtype=np.float64)
-
-#         terminated = bool(
-#             x < -self.x_threshold
-#             or x > self.x_threshold
-#             or theta < -self.theta_threshold_radians
-#             or theta > self.theta_threshold_radians
-#         )
-
-#         self.steps += 1
-#         truncated = self.steps >= self.max_episode_steps
-
-#         if self._sutton_barto_reward:
-#             reward = -np.array(terminated, dtype=np.float32)
-#         else:
-#             reward = np.ones_like(terminated, dtype=np.float32)
-
-#                 # Reset all environments which terminated or were truncated in the last step
-#         self.state[:, self.prev_done] = self.np_random.uniform(
-#             low=self.low, high=self.high, size=(4, self.prev_done.sum())
-#         )
-#         self.steps[self.prev_done] = 0
-#         reward[self.prev_done] = 0.0
-#         terminated[self.prev_done] = False
-#         truncated[self.prev_done] = False
-
-#         self.prev_done = np.logical_or(terminated, truncated)
-
-#         return self.state.T.astype(np.float32), reward, terminated, truncated, {}
-
-
-#     def reset(
-#         self,
-#         *,
-#         seed: Optional[int] = None,
-#         options: Optional[dict] = None,
-#     ):
-#         super().reset(seed=seed)
-#         # Note that if you use custom reset bounds, it may lead to out-of-bound
-#         # state/observations.
-#         # -0.05 and 0.05 is the default low and high bounds
-#         self.low, self.high = utils.maybe_parse_reset_bounds(options, -0.05, 0.05)
-#         self.state = self.np_random.uniform(
-#             low=self.low, high=self.high, size=(4, self.num_envs)
-#         )
-#         self.steps_beyond_terminated = None
-#         self.steps = np.zeros(self.num_envs, dtype=np.int32)
-#         self.prev_done = np.zeros(self.num_envs, dtype=np.bool_)
-
-#         return self.state.T.astype(np.float32), {}
-
-#     def render(self):
-#         if self.render_mode is None:
-#             assert self.spec is not None
-#             gym.logger.warn(
-#                 "You are calling render method without specifying any render mode. "
-#                 "You can specify the render_mode at initialization, "
-#                 f'e.g. gym.make_vec("{self.spec.id}", render_mode="rgb_array")'
-#             )
-#             return
-
-#         try:
-#             import pygame
-#             from pygame import gfxdraw
-#         except ImportError:
-#             raise DependencyNotInstalled(
-#                 'pygame is not installed, run `pip install "gymnasium[classic_control]"`'
-#             )
-
-#         if self.screens is None:
-#             pygame.init()
-
-#             self.screens = [
-#                 pygame.Surface((self.screen_width, self.screen_height))
-#                 for _ in range(self.num_envs)
-#             ]
-
-#         world_width = self.x_threshold * 2
-#         scale = self.screen_width / world_width
-#         polewidth = 10.0
-#         polelen = scale * (2 * self.length)
-#         cartwidth = 50.0
-#         cartheight = 30.0
-
-#         if self.state is None:
-#             raise ValueError(
-#                 "Cartpole's state is None, it probably hasn't be reset yet."
-#             )
-
-#         for x, screen in zip(self.state.T, self.screens):
-#             assert isinstance(x, np.ndarray) and x.shape == (4,)
-
-#             self.surf = pygame.Surface((self.screen_width, self.screen_height))
-#             self.surf.fill((255, 255, 255))
-
-#             l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
-#             axleoffset = cartheight / 4.0
-#             cartx = x[0] * scale + self.screen_width / 2.0  # MIDDLE OF CART
-#             carty = 100  # TOP OF CART
-#             cart_coords = [(l, b), (l, t), (r, t), (r, b)]
-#             cart_coords = [(c[0] + cartx, c[1] + carty) for c in cart_coords]
-#             gfxdraw.aapolygon(self.surf, cart_coords, (0, 0, 0))
-#             gfxdraw.filled_polygon(self.surf, cart_coords, (0, 0, 0))
-
-#             l, r, t, b = (
-#                 -polewidth / 2,
-#                 polewidth / 2,
-#                 polelen - polewidth / 2,
-#                 -polewidth / 2,
-#             )
-
-#             pole_coords = []
-#             for coord in [(l, b), (l, t), (r, t), (r, b)]:
-#                 coord = pygame.math.Vector2(coord).rotate_rad(-x[2])
-#                 coord = (coord[0] + cartx, coord[1] + carty + axleoffset)
-#                 pole_coords.append(coord)
-#             gfxdraw.aapolygon(self.surf, pole_coords, (202, 152, 101))
-#             gfxdraw.filled_polygon(self.surf, pole_coords, (202, 152, 101))
-
-#             gfxdraw.aacircle(
-#                 self.surf,
-#                 int(cartx),
-#                 int(carty + axleoffset),
-#                 int(polewidth / 2),
-#                 (129, 132, 203),
-#             )
-#             gfxdraw.filled_circle(
-#                 self.surf,
-#                 int(cartx),
-#                 int(carty + axleoffset),
-#                 int(polewidth / 2),
-#                 (129, 132, 203),
-#             )
-
-#             gfxdraw.hline(self.surf, 0, self.screen_width, carty, (0, 0, 0))
-
-#             self.surf = pygame.transform.flip(self.surf, False, True)
-#             screen.blit(self.surf, (0, 0))
-
-#         return [
-#             np.transpose(np.array(pygame.surfarray.pixels3d(screen)), axes=(1, 0, 2))
-#             for screen in self.screens
-#         ]
-
-#     def close(self):
-#         if self.screens is not None:
-#             import pygame
-
-#             pygame.quit()
