@@ -8,6 +8,8 @@ from controller import TiltController
 from logger import DataLogger
 import signal
 import sys
+from controller_rl import HardwareModelAgent
+import datetime
 
 # Configure real-time scheduling BEFORE other imports
 os.nice(-20)  # Highest priority
@@ -27,7 +29,6 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-
 # Hardware initialization
 imu = MPU6050(roll_offset=0.3)
 motor = HardwarePWMMotor()
@@ -39,6 +40,10 @@ encoder = PiEncoder(pin_a=23, pin_b=24)
 processor = EncoderProcessor(pulses_per_rev=2262)
 
 controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)
+
+ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model")
+dqn_model_path = os.path.join("Training", "Saved Models", "DQN_model")
+controller_rl = HardwareModelAgent(model_type='PPO', model_path=ppo_model_path, env_name='CustomCartPole-v1')
 logger = DataLogger()
 
 logger.start()
@@ -64,7 +69,9 @@ try:
             gyro_rate_x = imu_data['gyro']['x']
            
             dts = datetime.datetime.now() ## 
-            control_output = controller.update(roll_angle, gyro_rate_x)
+            # control_output = controller.update(roll_angle, gyro_rate_x)
+            control_output = controller_rl.control([x, x_dot, roll_angle, gyro_rate_x])
+            
             dte = datetime.datetime.now() ##
             time4ctrlout = dte-dts
             s =(time4ctrlout.total_seconds())
