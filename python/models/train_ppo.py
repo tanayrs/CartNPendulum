@@ -31,7 +31,7 @@ if project_root not in sys.path:
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="env.custom_cartpole:CartPoleEnv",
+        entry_point="environment.custom_cartpole:CartPoleEnv",
     )
 except gym.error.Error as e:
     # If the environment has already been registered, ignore the error.

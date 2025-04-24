@@ -21,13 +21,13 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 # Import the custom environment module (from the 'env' folder)
-import environment.custom_cartpole
+#import environment.custom_cartpole
 
 # Register the custom environment so that gymnasium can find it.
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="env.custom_cartpole:CartPoleEnv",  # ensure this matches your class name
+        entry_point="environment.custom_cartpole:CartPoleEnv",  # ensure this matches your class name
     )
 except gym.error.Error as e:
     if "already registered" in str(e):
