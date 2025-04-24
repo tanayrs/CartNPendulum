@@ -1,3 +1,4 @@
 misc/
 hardware/main/__pycache__/*
 python/env/__pycache__/
+hardware/botenv/
