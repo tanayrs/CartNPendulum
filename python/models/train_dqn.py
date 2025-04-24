@@ -44,7 +44,7 @@ os.makedirs(log_path, exist_ok=True)
 model = DQN('MlpPolicy', env, verbose=1, tensorboard_log=log_path)
 
 # Train the model (remove callback if undefined)
-model.learn(total_timesteps=20000)
+model.learn(total_timesteps=200000)
 
 # Save the trained model
 dqn_path = os.path.join('Training', 'Saved Models', 'DQN_model')

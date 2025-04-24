@@ -166,7 +166,7 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
 
         # our pwm values go from -40000 to 40000, but that maps to 12V, realistically you can only really 
         # 5.5/0.5 = 11 states, so we can use 0.5V as the low and high values
-        self.action_space = spaces.Discrete(11)
+        self.action_space = spaces.Discrete(41)
         self.observation_space = spaces.Box(-high, high, dtype=np.float32)
 
         self.render_mode = render_mode
@@ -187,7 +187,7 @@ class CartPoleEnv1(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         assert self.state is not None, "Call reset before using step method."
         x, x_dot, theta, theta_dot = self.state
         
-        force = (self.max_force/5)*(action-5)
+        force = (self.max_force/20)*(action-20)
 
         # print(f'Custom step function called with {action=}')
 

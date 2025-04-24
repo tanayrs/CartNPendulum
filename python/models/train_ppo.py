@@ -66,7 +66,7 @@ vec_env = DummyVecEnv([lambda: gym.make(environment_name)])
 
 # ✅ Train PPO with the custom environment
 model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=log_path)
-model.learn(total_timesteps=100)
+model.learn(total_timesteps=10000)
 
 # ✅ Save the trained model
 PPO_path = os.path.join("Training", "Saved Models", "PPO_model")
