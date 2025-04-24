@@ -1,7 +1,7 @@
 # CartNPendulum
-2-DoC Cart and Pendulum for RO3002: Reinforcement Learning
+Segway for RO3002: Reinforcement Learning
 
-
+LAST STABLE VERSION BEFORE CLEANUP
 ​
 Segway Params:
     
