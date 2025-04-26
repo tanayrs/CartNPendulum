@@ -47,7 +47,7 @@ controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="python.env.custom_cartpole1:CartPoleEnv1",  # Adjust path based on your directory structure
+        entry_point="python.environment.custom_cartpole:CartPoleEnv",  # Adjust path based on your directory structure
     )
 except gymnasium.error.Error as e:
     # If the environment has already been registered, ignore the error.
