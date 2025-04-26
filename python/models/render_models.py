@@ -1,9 +1,13 @@
+# This script loads a saved model and renders the environment.
+
+# imports
 import os
 import sys
 import time
 import gymnasium as gym
 from stable_baselines3 import PPO, DQN
 from gymnasium.envs.registration import register
+
 
 # --- Adjust sys.path so that the custom environment is accessible ---
 try:
@@ -19,7 +23,7 @@ if project_root not in sys.path:
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="env.custom_cartpole1:CartPoleEnv1",
+        entry_point="environment.custom_cartpole:CartPoleEnv",
     )
 except gym.error.Error as e:
     # If the environment has already been registered, ignore the error.
@@ -28,7 +32,7 @@ except gym.error.Error as e:
     else:
         raise e
 
-# ✅ Create an instance of your custom environment using gym.make
+# Create an instance of your custom environment using gym.make
 environment_name = "CustomCartPole-v1"
 env = gym.make(environment_name, render_mode="human")
 

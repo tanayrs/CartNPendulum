@@ -1,8 +1,9 @@
 # CartNPendulum
-2-DoC Cart and Pendulum for RO3002: Reinforcement Learning
+Segway for RO3002: Reinforcement Learning
 
-
+LAST STABLE VERSION BEFORE CODE FILE EDITS
 ​
+
 Segway Params:
     
     p.m = 0.841; % in kg

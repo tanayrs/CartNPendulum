@@ -1,3 +1,6 @@
+# PPO (Proximal Policy Optimization) training script for a custom CartPole environment
+
+# imports
 import os
 import sys
 import warnings
@@ -11,7 +14,7 @@ from gymnasium.envs.registration import register
 
 #warnings.filterwarnings("ignore")
 
-# ✅ Determine the project root folder (which contains both env and models)
+# Determine the project root folder (which contains both env and models)
 try:
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..')) 
 except NameError:
@@ -20,15 +23,15 @@ except NameError:
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# ✅ Import your custom environment module from the env folder
-import env.custom_cartpole1
+# Import your custom environment module from the env folder
+#import python.env.custom_cartpole
 
-# ✅ Register your custom environment so gymnasium can find it.
+# Register your custom environment so gymnasium can find it.
 # Make sure the entry point string matches the module path and your class name.
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="env.custom_cartpole1:CartPoleEnv1",
+        entry_point="environment.custom_cartpole:CartPoleEnv",
     )
 except gym.error.Error as e:
     # If the environment has already been registered, ignore the error.
@@ -37,11 +40,11 @@ except gym.error.Error as e:
     else:
         raise e
 
-# ✅ Create an instance of your custom environment using gym.make
+# Create an instance of your custom environment using gym.make
 environment_name = "CustomCartPole-v1"
 env_instance = gym.make(environment_name)
 
-# ✅ (Optional) Run a few episodes for visual inspection (rendering disabled on headless environments)
+# (Optional) Run a few episodes for visual inspection (rendering disabled on headless environments)
 episodes = 5
 for episode in range(1, episodes + 1):
     state, _ = env_instance.reset()
@@ -57,18 +60,18 @@ for episode in range(1, episodes + 1):
 
 env_instance.close()
 
-# ✅ Prepare training logging directory
+# Prepare training logging directory
 log_path = os.path.join("Training", "Logs")
 os.makedirs(log_path, exist_ok=True)
 
 # Wrap the environment in a DummyVecEnv for stable-baselines3
 vec_env = DummyVecEnv([lambda: gym.make(environment_name)])
 
-# ✅ Train PPO with the custom environment
+# Train PPO with the custom environment
 model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=log_path)
-model.learn(total_timesteps=100)
+model.learn(total_timesteps=10000)
 
-# ✅ Save the trained model
+# Save the trained model
 PPO_path = os.path.join("Training", "Saved Models", "PPO_model")
 os.makedirs(os.path.dirname(PPO_path), exist_ok=True)
 model.save(PPO_path)

@@ -47,7 +47,7 @@ controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)
 try:
     register(
         id="CustomCartPole-v1",
-        entry_point="python.env.custom_cartpole1:CartPoleEnv1",  # Adjust path based on your directory structure
+        entry_point="python.environment.custom_cartpole:CartPoleEnv",  # Adjust path based on your directory structure
     )
 except gymnasium.error.Error as e:
     # If the environment has already been registered, ignore the error.
@@ -58,11 +58,11 @@ except gymnasium.error.Error as e:
 
 # Use absolute paths for model files
 ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model.zip')
-dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model')
+dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
 
 # Import controller after environment registration
 from controller_rl import HardwareModelAgent
-controller_rl = HardwareModelAgent(model_type='PPO', model_path=ppo_model_path, env_name='CustomCartPole-v1')
+controller_rl = HardwareModelAgent(model_type='DQN', model_path=dqn_model_path, env_name='CustomCartPole-v1')
 
 logger = DataLogger()
 logger.start()
