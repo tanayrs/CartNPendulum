@@ -9,7 +9,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.evaluation import evaluate_policy
 from gymnasium.envs.registration import register
-#import env.custom_cartpole
+# import env.custom_cartpole
 
 
 #warnings.filterwarnings("ignore")
@@ -24,7 +24,7 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 # Import your custom environment module from the env folder
-#import python.env.custom_cartpole
+# import python.environment.custom_cartpole
 
 # Register your custom environment so gymnasium can find it.
 # Make sure the entry point string matches the module path and your class name.
@@ -72,7 +72,7 @@ model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=log_path)
 model.learn(total_timesteps=10000)
 
 # Save the trained model
-PPO_path = os.path.join("Training", "Saved Models", "PPO_model")
+PPO_path = os.path.join("Training", "Saved Models", "PPO_model_jia")
 os.makedirs(os.path.dirname(PPO_path), exist_ok=True)
 model.save(PPO_path)
 
