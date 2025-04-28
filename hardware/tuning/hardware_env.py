@@ -53,6 +53,7 @@ class HardwareBalancingEnv(gym.Env):
         self.current_step += 1
         # Convert action to motor command
         control_output = ((action-20)/20) * 40000
+        print(f"Action: {action}, Control Output: {control_output}, Current Speed: {self.processor.get_speed_ms()}")
         self.motor.set_speed(control_output, self.processor.get_speed_ms())
         time.sleep(0.01)
         obs = self._get_obs()
