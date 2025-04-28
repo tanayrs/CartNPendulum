@@ -9,7 +9,7 @@ class SafetyMonitor(threading.Thread):
         self.threshold = threshold
         self.running = True
         self.daemon = True
-        
+
     def run(self):
         while self.running:
             obs = self.env._get_obs()
@@ -17,7 +17,6 @@ class SafetyMonitor(threading.Thread):
                 self.env.motor.stop()
                 print("Safety cutoff triggered!")
             time.sleep(0.01)
-            
+
     def stop(self):
         self.running = False
-
