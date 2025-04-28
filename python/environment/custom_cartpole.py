@@ -120,6 +120,11 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         self, sutton_barto_reward: bool = False, render_mode: Optional[str] = None
     ):
         self._sutton_barto_reward = sutton_barto_reward
+        self.state_action_reward = True  # If True, the reward is based on the state and action taken
+        self.k = 0.1  # Hyperparameter for action penalty in reward function
+
+        self.max_steps = 500  # Maximum number of steps in an episode
+        self.step_counter = 0  # Counter for steps taken in the current episode
 
         # CHANGED: Define custom parameters using MATLAB syntax variable names and values.
         self.p_m = 0.841           # kg, mass of the pole
@@ -195,10 +200,17 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         I = self.p_I
         # CHANGED: Using the custom parameters for the dynamics calculation.
 
-        xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
-                (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
+        # xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
+        #         (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
 
-        thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta)))/(I + (d**2)*m*(sin(theta)**2))
+        # thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta)))/(I + (d**2)*m*(sin(theta)**2))
+
+        # Corrected equations of motion
+        xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
+       (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
+
+        thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta) - b*x_dot*cos(theta)))/(I + (d**2)*m*(sin(theta)**2))
+
 
         if self.kinematics_integrator == "semi-implicit euler":  # semi-implicit euler
             x_dot = x_dot + self.tau * xacc
@@ -221,12 +233,22 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             or theta > self.theta_threshold_radians
         )
 
+        truncated = self.step_counter >= self.max_steps
+
         if not terminated:
-            reward = 0.0 if self._sutton_barto_reward else 1.0
+            if self.state_action_reward:
+                # Use custom state-action reward
+                action_penalty = (action - 20)**2
+                lambda_theta = self.k * (1 - abs(math.cos(theta)))
+                reward = math.cos(theta)**2 - lambda_theta * action_penalty
+            else:
+                reward = 0.0 if self._sutton_barto_reward else 1.0
+
         elif self.steps_beyond_terminated is None:
             # Pole just fell!
             self.steps_beyond_terminated = 0
             reward = -1.0 if self._sutton_barto_reward else 1.0
+
         else:
             if self.steps_beyond_terminated == 0:
                 logger.warn(
@@ -234,15 +256,14 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
                     "You should always call 'reset()' once you receive 'terminated = True' -- any further steps are undefined behavior."
                 )
             self.steps_beyond_terminated += 1
-
-            ##  COMMENT: REWARD FUCNTION IMPORTANT
             reward = -1.0 if self._sutton_barto_reward else 0.0
 
         if self.render_mode == "human":
             self.render()
 
+        self.step_counter += 1
         # truncation=False as the time limit is handled by the `TimeLimit` wrapper added during `make`
-        return np.array(self.state, dtype=np.float32), reward, terminated, False, {}
+        return np.array(self.state, dtype=np.float32), reward, terminated, truncated, {}
 
     def reset(
         self,
@@ -254,13 +275,15 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         # Note that if you use custom reset bounds, it may lead to out-of-bound
         # state/observations.
         low, high = utils.maybe_parse_reset_bounds(
-            options, -0.05, 0.05  # default low
+            options, -0.2, 0.2  # default low
         )  # default high
         self.state = self.np_random.uniform(low=low, high=high, size=(4,))
         self.steps_beyond_terminated = None
 
         if self.render_mode == "human":
             self.render()
+
+        self.step_counter = 0
         return np.array(self.state, dtype=np.float32), {}
 
     def render(self):

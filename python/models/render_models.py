@@ -7,7 +7,7 @@ import time
 import gymnasium as gym
 from stable_baselines3 import PPO, DQN
 from gymnasium.envs.registration import register
-
+import numpy as np
 
 # --- Adjust sys.path so that the custom environment is accessible ---
 try:
@@ -38,7 +38,7 @@ env = gym.make(environment_name, render_mode="human")
 
 # --- Load your saved models ---
 # Adjust these paths to where you have saved your models.
-ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model")
+ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model_jia")
 dqn_model_path = os.path.join("Training", "Saved Models", "DQN_model")
 
 # Uncomment the model you want to test, or test both in succession:
@@ -55,20 +55,26 @@ print("Loaded PPO model.")
 episodes = 150
 for episode in range(1, episodes + 1):
     obs, _ = env.reset()
-    done = False
+    terminated = False
+    truncated = False
     score = 0
+    steps = 0
+    x0, x_dot0, theta0, theta_dot0 = obs
     print(f"Starting episode {episode}...")
-    while not done:
+    print(f"Initial theta: {np.degrees(theta0):.2f} deg, Initial x: {x0:.2f} m")
+    while not terminated and not truncated:
         # Optional: call env.render() if needed
         # (Note: some Gymnasium environments automatically update the display in 'human' mode)
         env.render()
         # Get action from the model (deterministic=True for consistent behavior during evaluation)
         action, _ = model.predict(obs, deterministic=True)
         # Step the environment
-        obs, reward, done, truncated, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
         score += reward
+        steps += 1
         # Slow down the simulation for visualization (optional)
         time.sleep(0.001)
-    print(f"Episode {episode}: Score = {score}")
+    print(f"Episode {episode} finished")
+    print(f"Score = {score:.2f}, Episode length = {steps} steps")
 
 env.close()
