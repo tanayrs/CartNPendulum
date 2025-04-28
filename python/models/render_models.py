@@ -55,8 +55,8 @@ print("Loaded PPO model.")
 episodes = 150
 for episode in range(1, episodes + 1):
     obs, _ = env.reset()
-    done = False
     terminated = False
+    truncated = False
     score = 0
     steps = 0
     x0, x_dot0, theta0, theta_dot0 = obs
