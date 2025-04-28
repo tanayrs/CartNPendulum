@@ -101,22 +101,23 @@ class MPU6050:
         print(f"GyroErrorZ: {self.gyro_error_z:.2f}")
     
     def read_raw_accel(self):
-        """Read raw accelerometer data from the sensor"""
-        data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
-        x = (data[0] << 8) | data[1]
-        y = (data[2] << 8) | data[3]
-        z = (data[4] << 8) | data[5]
-        
-        # Convert from two's complement
-        if x > 0x7FFF:
-            x -= 0x10000
-        if y > 0x7FFF:
-            y -= 0x10000
-        if z > 0x7FFF:
-            z -= 0x10000
-            
-        return [x, y, z]
+        try:
+            data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
+        except OSError as e:
+            print(f"Error reading accelerometer: {e}")
+            if hasattr(self, 'raw_accel_data'):
+                return self.raw_accel_data  # Return last successful reading
+            return [0]*6  # Fallback for initial failure
     
+        # Store successful reading for future error fallback
+        self.raw_accel_data = data
+    
+        # Original processing continues
+        raw_x = (data[0] << 8) | data[1]
+        raw_y = (data[2] << 8) | data[3]
+        raw_z = (data[4] << 8) | data[5]
+        return [raw_x, raw_y, raw_z]
+
     def read_raw_gyro(self):
         """Read raw gyroscope data from the sensor"""
         data = self.bus.read_i2c_block_data(self.address, self.GYRO_XOUT_H, 6)
