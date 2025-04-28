@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-
 # File used to find calibration values of theta and theta_dot sensor
 
+# imports
 import smbus
 import math
 import time
@@ -48,91 +48,104 @@ class MPU6050:
         """Calculate sensor offsets"""
         print("Calculating IMU offsets. Please keep the sensor still...")
         
+        # Initialize error variables to zero
         self.acc_error_x, self.acc_error_y = 0, 0
         self.gyro_error_x, self.gyro_error_y, self.gyro_error_z = 0, 0, 0
         
         # Calibrate accelerometer
         for _ in range(samples):
             try:
+                # Read raw accelerometer data
                 acc_data = self.read_raw_accel()
+                # Convert raw values to g units
                 acc_x = acc_data[0] / self.ACCEL_SCALE_FACTOR
                 acc_y = acc_data[1] / self.ACCEL_SCALE_FACTOR
                 acc_z = acc_data[2] / self.ACCEL_SCALE_FACTOR
                 
-                # Calculate angles and sum up errors
+                # Calculate roll angle (x-axis rotation) using arctan of y/z components
                 self.acc_error_x += (math.atan2(acc_y, acc_z) * 180 / math.pi)
+                # Calculate pitch angle (y-axis rotation) using arctan of x and sqrt(y²+z²)
                 self.acc_error_y += (math.atan2(-acc_x, math.sqrt(acc_y**2 + acc_z**2)) * 180 / math.pi)
                 
+                # Short delay between readings
                 time.sleep(0.003)
             except Exception as e:
                 print(f"Error during accelerometer calibration: {e}")
         
-        # Calculate average accelerometer error
+        # Calculate average accelerometer error over all samples
         self.acc_error_x /= samples
         self.acc_error_y /= samples
         
         # Calibrate gyroscope
         for _ in range(samples):
             try:
+                # Read raw gyroscope data
                 gyro_data = self.read_raw_gyro()
+                # Convert raw values to degrees/second
                 gyro_x = gyro_data[0] / self.GYRO_SCALE_FACTOR
                 gyro_y = gyro_data[1] / self.GYRO_SCALE_FACTOR
                 gyro_z = gyro_data[2] / self.GYRO_SCALE_FACTOR
                 
-                # Sum up errors
+                # Sum up gyroscope readings (ideally should be zero when still)
                 self.gyro_error_x += gyro_x
                 self.gyro_error_y += gyro_y
                 self.gyro_error_z += gyro_z
                 
+                # Short delay between readings
                 time.sleep(0.003)
             except Exception as e:
                 print(f"Error during gyroscope calibration: {e}")
         
-        # Calculate average gyroscope error
+        # Calculate average gyroscope error over all samples
         self.gyro_error_x /= samples
         self.gyro_error_y /= samples
         self.gyro_error_z /= samples
         
+        # Output calibration results
         print("IMU calibration complete.")
-        print(f"AccErrorX: {self.acc_error_x:.2f}")
-        print(f"AccErrorY: {self.acc_error_y:.2f}")
-        print(f"GyroErrorX: {self.gyro_error_x:.2f}")
-        print(f"GyroErrorY: {self.gyro_error_y:.2f}")
-        print(f"GyroErrorZ: {self.gyro_error_z:.2f}")
+        print(f"AccErrorX: {self.acc_error_x:.2f}")  # Roll error in degrees
+        print(f"AccErrorY: {self.acc_error_y:.2f}")  # Pitch error in degrees
+        print(f"GyroErrorX: {self.gyro_error_x:.2f}")  # X-axis drift in degrees/second
+        print(f"GyroErrorY: {self.gyro_error_y:.2f}")  # Y-axis drift in degrees/second
+        print(f"GyroErrorZ: {self.gyro_error_z:.2f}")  # Z-axis drift in degrees/second
     
     def read_raw_accel(self):
         """Read raw accelerometer data from the sensor"""
+        # Read 6 bytes starting from ACCEL_XOUT_H register
         data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
-        x = (data[0] << 8) | data[1]
-        y = (data[2] << 8) | data[3]
-        z = (data[4] << 8) | data[5]
+        # Combine high and low bytes to form 16-bit values
+        x = (data[0] << 8) | data[1]  # X-axis value
+        y = (data[2] << 8) | data[3]  # Y-axis value
+        z = (data[4] << 8) | data[5]  # Z-axis value
         
-        # Convert from two's complement
+        # Convert from two's complement for negative values
         if x > 0x7FFF:
-            x -= 0x10000
+            x -= 0x10000  # If highest bit is set, value is negative
         if y > 0x7FFF:
-            y -= 0x10000
+            y -= 0x10000  # If highest bit is set, value is negative
         if z > 0x7FFF:
-            z -= 0x10000
+            z -= 0x10000  # If highest bit is set, value is negative
             
-        return [x, y, z]
+        return [x, y, z]  # Return raw accelerometer values
     
     def read_raw_gyro(self):
         """Read raw gyroscope data from the sensor"""
+        # Read 6 bytes starting from GYRO_XOUT_H register
         data = self.bus.read_i2c_block_data(self.address, self.GYRO_XOUT_H, 6)
-        x = (data[0] << 8) | data[1]
-        y = (data[2] << 8) | data[3]
-        z = (data[4] << 8) | data[5]
+        # Combine high and low bytes to form 16-bit values
+        x = (data[0] << 8) | data[1]  # X-axis value
+        y = (data[2] << 8) | data[3]  # Y-axis value
+        z = (data[4] << 8) | data[5]  # Z-axis value
         
-        # Convert from two's complement
+        # Convert from two's complement for negative values
         if x > 0x7FFF:
-            x -= 0x10000
+            x -= 0x10000  # If highest bit is set, value is negative
         if y > 0x7FFF:
-            y -= 0x10000
+            y -= 0x10000  # If highest bit is set, value is negative
         if z > 0x7FFF:
-            z -= 0x10000
+            z -= 0x10000  # If highest bit is set, value is negative
             
-        return [x, y, z]
+        return [x, y, z]  # Return raw gyroscope values
     
     def get_accel_data(self):
         """Get processed accelerometer data in g units"""
@@ -154,14 +167,17 @@ class MPU6050:
     
     def read_temp(self):
         """Read temperature from the sensor in degrees Celsius"""
+        # Read 2 bytes from the temperature sensor register (0x41)
         data = self.bus.read_i2c_block_data(self.address, 0x41, 2)
+        # Combine high byte (shifted left by 8 bits) with low byte to form 16-bit value
         temp = (data[0] << 8) | data[1]
         
-        # Convert from two's complement
+        # Convert from two's complement for negative values
         if temp > 0x7FFF:
             temp -= 0x10000
             
-        # Formula from datasheet
+        # Apply scaling formula from MPU6050 datasheet
+        # Temperature in degrees C = (raw_value / 340) + 36.53
         return (temp / 340.0) + 36.53
     
     def get_angles_accelerometer(self):
@@ -170,9 +186,12 @@ class MPU6050:
         self.get_accel_data()
         
         # Calculate angles using atan2 for better accuracy
+        # roll (rotation around X-axis) is calculated from Y and Z acceleration components
         roll = math.atan2(self.acc_y, self.acc_z) * 180 / math.pi
+        # pitch (rotation around Y-axis) is calculated using X and combined Y-Z acceleration
         pitch = math.atan2(-self.acc_x, math.sqrt(self.acc_y**2 + self.acc_z**2)) * 180 / math.pi
         
+        # Return angles with calibration error compensation
         return {'roll': roll - self.acc_error_x, 'pitch': pitch - self.acc_error_y}
     
     def update(self):
@@ -260,22 +279,28 @@ class DataLogger:
         # Get timestamp in milliseconds
         timestamp_ms = int(time.time() * 1000)
         
-        # Extract data
-        accel = data['accel']
-        gyro = data['gyro']
-        angle = data['angle']
-        temp = data['temp']
+        # Extract data from the sensor readings dictionary
+        accel = data['accel']   # Accelerometer data (x, y, z)
+        gyro = data['gyro']     # Gyroscope data (x, y, z)
+        angle = data['angle']   # Calculated angles (roll, pitch, yaw)
+        temp = data['temp']     # Temperature reading in Celsius
         
-        # Write data row
+        # Write data row to CSV with 4 decimal precision for sensor values
         self.log_writer.writerow([
-            timestamp_ms,
-            round(accel['x'], 4), round(accel['y'], 4), round(accel['z'], 4),
-            round(gyro['x'], 4), round(gyro['y'], 4), round(gyro['z'], 4),
-            round(angle['roll'], 4), round(angle['pitch'], 4), round(angle['yaw'], 4),
-            round(temp, 2)
+            timestamp_ms,                     # Current time in milliseconds
+            round(accel['x'], 4),             # Acceleration X (g)
+            round(accel['y'], 4),             # Acceleration Y (g)
+            round(accel['z'], 4),             # Acceleration Z (g)
+            round(gyro['x'], 4),              # Angular velocity X (°/s)
+            round(gyro['y'], 4),              # Angular velocity Y (°/s)
+            round(gyro['z'], 4),              # Angular velocity Z (°/s)
+            round(angle['roll'], 4),          # Roll angle (°)
+            round(angle['pitch'], 4),         # Pitch angle (°)
+            round(angle['yaw'], 4),           # Yaw angle (°)
+            round(temp, 2)                    # Temperature (°C)
         ])
         
-        # Flush to ensure data is written to disk
+        # Flush to ensure data is written to disk immediately
         self.log_file.flush()
     
     def close(self):
