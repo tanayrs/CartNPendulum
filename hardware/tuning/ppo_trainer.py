@@ -4,6 +4,7 @@ import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import BaseCallback
+from hardware_interface import HardwareInterface
 import gymnasium as gym
 
 class SafetyMonitorCallback(BaseCallback):
@@ -53,12 +54,28 @@ class RealWorldPPOTrainer:
         self.model = PPO.load(path, env=self.env)
 
 class RealWorldEnv(gym.Env):
-    def __init__(self, max_angle=15.0, max_position=0.5, 
-                 max_episode_steps=500, safety_threshold=25.0):
-        # Observation space matches simulation
+    def __init__(self, 
+                 max_position=4.8,        # Match simulation's cart position range
+                 max_velocity=np.inf,        # Match simulation's velocity limit
+                 max_angle=0.41887903,    # ~24 degrees in radians (simulation value)
+                 max_angle_velocity=np.inf,
+                 max_episode_steps=500,
+                 safety_threshold = 25.0): # Match simulation's angular velocity limit
+        
         self.observation_space = gym.spaces.Box(
-            low=np.array([-max_position, -5.0, -np.radians(max_angle), -np.radians(100)]),
-            high=np.array([max_position, 5.0, np.radians(max_angle), np.radians(100)]),
+            low=np.array([
+                -max_position,
+                -max_velocity,
+                -max_angle,
+                -max_angle_velocity
+            ], dtype=np.float32),
+            high=np.array([
+                max_position,
+                max_velocity,
+                max_angle,
+                max_angle_velocity
+            ], dtype=np.float32),
+            shape=(4,),
             dtype=np.float32
         )
         

@@ -10,8 +10,8 @@ def main():
     args = parser.parse_args()
 
     env_config = {
-        "max_angle": 15.0,
-        "max_position": 0.5,
+        "max_angle": 0.41887903,
+        "max_position": 4.8,
         "max_episode_steps": 500,
         "safety_threshold": 25.0
     }
