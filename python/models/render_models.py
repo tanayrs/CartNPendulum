@@ -38,7 +38,7 @@ env = gym.make(environment_name, render_mode="human")
 
 # --- Load your saved models ---
 # Adjust these paths to where you have saved your models.
-ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model_jia")
+ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model")
 # dqn_model_path = os.path.join("Training", "Saved Models", "DQN_model")
 
 # Uncomment the model you want to test, or test both in succession:
