@@ -61,6 +61,9 @@ except gymnasium.error.Error as e:
 ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model_jia.zip')
 dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
 
+# Use hardware trained model 
+ppo_model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'interrupted_model.zip')
+
 # Import controller after environment registration
 from controller_rl import HardwareModelAgent
 controller_rl = HardwareModelAgent(model_type='PPO', model_path=ppo_model_path, env_name='CustomCartPole-v1')
