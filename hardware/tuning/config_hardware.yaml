@@ -17,5 +17,5 @@ training:
   reward:
     angle_weight: 1.0
     position_weight: 0.1
-    action_penalty: 0.001
+    action_penalty: 0.1
 

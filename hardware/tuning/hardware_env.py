@@ -9,7 +9,7 @@ import time
 class HardwareBalancingEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, max_steps=1000):
+    def __init__(self, max_steps=1000, k = 0.1):
         super(HardwareBalancingEnv, self).__init__()
         # Hardware initialization
         self.imu = MPU6050(roll_offset=0)
@@ -19,21 +19,23 @@ class HardwareBalancingEnv(gym.Env):
         # Action and observation spaces
         self.action_space = spaces.Discrete(41) # Same as simulation
         self.observation_space = spaces.Box(
-            low=np.array([-2.4, -np.inf, -0.418, -np.inf]),
-            high=np.array([2.4, np.inf, 0.418, np.inf]),
+            low=np.array([-4.8, -np.inf, -0.41887903, -np.inf]),
+            high=np.array([4.8, np.inf, 0.41887903, np.inf]),
             dtype=np.float32
         )
         self.max_steps = max_steps
         self.current_step = 0
         self.safety_threshold = 0.3 # meters
+        self.k = k
 
     def _get_obs(self):
         ticks = self.encoder.read()
         self.processor.update(ticks)
         imu_data = self.imu.update()
         # CRITICAL FIX: imu_data['angle']['roll'] is in degrees, convert to radians ONCE
-        theta = np.deg2rad(imu_data['angle']['roll'])
-        theta_dot = np.deg2rad(imu_data['gyro']['x'])
+        theta = imu_data['angle']['roll']
+        theta_dot = imu_data['gyro']['x']
+
         return np.array([
             self.processor.get_position_meters(),  # x
             self.processor.get_speed_ms(),         # x_dot
@@ -62,8 +64,9 @@ class HardwareBalancingEnv(gym.Env):
 
     def _calculate_reward(self, obs, action):
         theta = obs[2]
-        action_penalty = (action - 20)**2 * 0.001
-        return (1 - abs(theta)) - action_penalty
+        cos2theta = np.cos(theta)**2
+        action_penalty = (action - 20)**2 * self.k * (1-abs(np.cos(theta)))
+        return cos2theta - action_penalty
 
     def close(self):
         self.motor.cleanup()

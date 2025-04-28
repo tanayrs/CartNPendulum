@@ -8,7 +8,7 @@ from safety_monitor import SafetyMonitor
 
 # Configuration parameters
 config = {
-    "pretrained_model": "saved_models/PPO_model.zip",
+    "pretrained_model": "saved_models/PPO_model_jia",
     "policy": "MlpPolicy",
     "total_timesteps": 50000,  # You can adjust this based on how much additional training you want
     "save_freq": 5000,
