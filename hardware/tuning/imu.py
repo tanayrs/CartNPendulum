@@ -103,7 +103,10 @@ class MPU6050:
     
     def read_raw_accel(self):
         """Read raw accelerometer data from the sensor"""
-        data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
+        try:
+            data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
+        except IOError as e:
+            print(f'IOError Occurred: {e}')
         x = (data[0] << 8) | data[1]
         y = (data[2] << 8) | data[3]
         z = (data[4] << 8) | data[5]

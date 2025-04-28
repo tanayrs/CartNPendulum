@@ -48,8 +48,71 @@ def load_pretrained_model(model_path, env):
                 "n_steps": 2048,
             }
         )
-
 def main():
+    print("Initializing hardware environment...")
+    # Create hardware environment
+    env = HardwareBalancingEnv(max_steps=500)
+    print("Environment initialized successfully")
+    
+    # Create safety monitor thread
+    safety_monitor = SafetyMonitor(env, threshold=0.3)
+    safety_monitor.start()
+    print("Safety monitor started")
+    
+    # Create directories if they don't exist
+    if not os.path.exists(config["save_path"]):
+        os.makedirs(config["save_path"])
+    if not os.path.exists(config["log_dir"]):
+        os.makedirs(config["log_dir"])
+
+    try:
+        print("Attempting to load pre-trained model...")
+        model = load_pretrained_model(config["pretrained_model"], env)
+        print("Model loaded successfully")
+    
+        # Print model and environment details
+        print(f"Model policy type: {type(model.policy)}")
+        print(f"Model observation space: {model.observation_space}")
+        print(f"Model action space: {model.action_space}")
+        print(f"Hardware environment observation space: {env.observation_space}")
+        print(f"Hardware environment action space: {env.action_space}")
+    
+        
+        # Set up callback for saving checkpoints
+        checkpoint_callback = CheckpointCallback(
+            save_freq=config["save_freq"],
+            save_path=config["save_path"],
+            name_prefix="hardware_model"
+        )
+        print("Checkpoint callback created")
+        
+        # Set up signal handlers for graceful shutdown
+        setup_signal_handlers(env, model, safety_monitor)
+        print("Signal handlers set up")
+        
+        print("Starting training...")
+        print("Press Ctrl+C to save and exit at any time")
+        
+        # Continue training with loaded weights
+        print("Calling model.learn()...")
+        model.learn(
+            total_timesteps=config["total_timesteps"],
+            callback=checkpoint_callback,
+            reset_num_timesteps=False,  # Continue timestep counting from pre-trained model
+            tb_log_name="hardware_training"
+        )
+        
+        # Save final model
+        model_save_path = f"{config['save_path']}/final_hardware_model"
+        print(f"Training complete. Saving final model to {model_save_path}")
+        model.save(model_save_path)
+        
+    except Exception as e:
+        print(f"Error during training: {e}")
+        import traceback
+        traceback.print_exc()  # This will print the full traceback
+
+def main_old():
     print("Initializing hardware environment...")
     # Create hardware environment
     env = HardwareBalancingEnv(max_steps=500)

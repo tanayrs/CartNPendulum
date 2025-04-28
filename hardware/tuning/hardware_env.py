@@ -46,7 +46,28 @@ class HardwareBalancingEnv(gym.Env):
     def reset(self, seed=None, options=None):
         self.motor.stop()
         self.current_step = 0
+        self.imu = MPU6050(roll_offset=0)
+        self.encoder = PiEncoder(pin_a=23, pin_b=24)
+        self.processor = EncoderProcessor(pulses_per_rev=2262)
+    
+        # Wait for manual positioning and ensure stability
         input("Manually position robot upright, then press Enter...")
+    
+        # Check if the robot is stable before proceeding
+        stable = False
+    
+        while not stable:
+            obs = self._get_obs()
+            angle = obs[2]
+        
+            if abs(angle) < 0.1:  # Much stricter threshold for starting
+                stable = True
+                print("Robot is stable, starting training...")
+            else:
+                print(f"Robot not stable: angle = {angle} radians ({angle * 57.3} degrees)")
+                print(f"Please adjust position.")
+                input("Press Enter when ready...")
+    
         return self._get_obs(), {}
 
     def step(self, action):
