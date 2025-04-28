@@ -40,14 +40,11 @@ class HardwareBalancingEnv(gym.Env):
             theta,                                # theta (radians)
             theta_dot                             # theta_dot (radians/sec)
         ], dtype=np.float32)
-
+    
     def reset(self, seed=None, options=None):
         self.motor.stop()
         self.current_step = 0
-        # Gentle reset procedure
-        for _ in range(50):
-            self.motor.set_speed(1000, 0)
-            time.sleep(0.01)
+        input("Manually position robot upright, then press Enter...")
         return self._get_obs(), {}
 
     def step(self, action):
