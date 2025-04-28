@@ -31,8 +31,8 @@ class MPU6050:
         self.acc_angle_x, self.acc_angle_y = 0.0, 0.0
         self.roll, self.pitch, self.yaw = 0.0, 0.0, 0.0
 
-        self.acc_error_x, self.acc_error_y = -0.04, -8.34
-        self.gyro_error_x, self.gyro_error_y, self.gyro_error_z = -3.82, -1.39, 0.31
+        self.acc_error_x, self.acc_error_y = -2.77, -0.83 
+        self.gyro_error_x, self.gyro_error_y, self.gyro_error_z = -3.90, -1.47, 0.20
 
         # Roll offset is angle measured when bot is "balanced"
         self.roll_offset = roll_offset
