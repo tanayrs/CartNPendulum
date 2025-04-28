@@ -1,0 +1,21 @@
+hardware:
+  imu:
+    bus_num: 1
+    address: 0x68
+  motor:
+    pwm_pin: 18
+    dir_pin: 16
+    pwm_range: 40000
+  encoder:
+    pins: [23, 24]
+    pulses_per_rev: 2262
+
+training:
+  max_episode_length: 500
+  safety_threshold: 0.3  # meters
+  control_interval: 0.01  # seconds
+  reward:
+    angle_weight: 1.0
+    position_weight: 0.1
+    action_penalty: 0.001
+
