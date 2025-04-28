@@ -42,7 +42,7 @@ class HardwareModelAgent:
         self.prev_output = filtered_output
 
         # Safety: zero output if angular velocity is small
-        if -12 < state_vector[3] < 12:
+        if -0.2 < state_vector[3] < 0.2:
             filtered_output = 0
 
         return int(filtered_output)
