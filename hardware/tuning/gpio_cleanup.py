@@ -18,6 +18,8 @@ def cleanup_all_gpio():
         
         # Setup all pins as output
         for pin in all_pins:
+            if pin in [2,3]:  # Do not close I2C SCL and SDA pins as IMU shuts off
+                continue
             try:
                 GPIO.setup(pin, GPIO.OUT)
                 GPIO.output(pin, GPIO.LOW)  # Set to LOW
