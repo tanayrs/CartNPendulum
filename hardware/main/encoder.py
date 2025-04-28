@@ -1,3 +1,5 @@
+# Class to read x and xdot from Encoder
+
 import pigpio
 import time
 import math

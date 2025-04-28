@@ -1,3 +1,5 @@
+# main file for encoder characterisation
+
 import os
 import time
 from motor import HardwarePWMMotor

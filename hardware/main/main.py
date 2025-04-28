@@ -1,3 +1,5 @@
+
+# Main file for the hardware deployment of the Cart-Pole system
 # Add to imports
 import numpy as np
 import os

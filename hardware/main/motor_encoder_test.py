@@ -1,3 +1,5 @@
+# Test to check motor and encoder functionality
+
 import time
 import matplotlib.pyplot as plt
 from motor import HardwarePWMMotor

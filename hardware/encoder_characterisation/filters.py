@@ -1,3 +1,5 @@
+# compare filters of encoder time derivative, explained under motor deadband compensation
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

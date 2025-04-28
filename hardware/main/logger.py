@@ -1,3 +1,5 @@
+# Datalogger for main deployment, saves trace of episodes
+
 import csv
 import os
 from datetime import datetime

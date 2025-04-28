@@ -1,3 +1,4 @@
+#Encoder Class, finds encoder reading used to get x and xdot, this folder it is being used to find deadband of motor 
 import pigpio
 import time
 import math

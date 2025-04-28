@@ -1,3 +1,8 @@
+'''
+What is motor deadband?
+    For some voltages given into the motor, it does not rotate, after which the speed increases linearly with voltage. This is the deadband of the motor. 
+    When we are doing control over this, we want to add this deadband to the input voltage, so that we can get a linear response from the motor.'''
+
 # Add to imports
 import os
 import time

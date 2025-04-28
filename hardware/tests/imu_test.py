@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+
+# File used to find calibration values of theta and theta_dot sensor
+
 import smbus
 import math
 import time

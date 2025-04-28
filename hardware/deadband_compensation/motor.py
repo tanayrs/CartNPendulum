@@ -1,3 +1,5 @@
+# motor class file, needed to run the motor
+
 import RPi.GPIO as GPIO
 import pigpio
 

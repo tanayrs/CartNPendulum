@@ -1,3 +1,5 @@
+# If you delete, motor no go
+
 import RPi.GPIO as GPIO
 import pigpio
 

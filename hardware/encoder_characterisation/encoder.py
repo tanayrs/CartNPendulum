@@ -1,3 +1,5 @@
+# needed to read from encoder
+
 import pigpio
 import time
 import math

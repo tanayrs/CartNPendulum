@@ -1,3 +1,6 @@
+# Now the deadband measurement needs to be averaged over multiple samples, so this file reads the deadband measurement code
+# and then averages the deadband measurements over multiple samples.
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt

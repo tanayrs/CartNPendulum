@@ -1,3 +1,5 @@
+# motor class, needed to tell motor how fast to spin, wheeeeeeeeee
+
 import RPi.GPIO as GPIO
 import pigpio
 

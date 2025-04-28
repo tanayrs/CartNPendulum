@@ -1,3 +1,5 @@
+# This file finds the max motor speed and maximum input PWM value
+
 # Add to imports
 import os
 import time

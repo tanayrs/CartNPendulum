@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Class to measure theta and theta_dot using MPU6050
+
 import smbus
 import math
 import time
