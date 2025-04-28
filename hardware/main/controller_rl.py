@@ -4,7 +4,7 @@ from stable_baselines3 import PPO, DQN
 import gymnasium as gym
 
 class HardwareModelAgent:
-    def __init__(self, model_type='PPO', model_path=None, env_name=None, filter_alpha=0.5):
+    def __init__(self, model_type='PPO', model_path=None, env_name=None, filter_alpha=0.4):
         """
         Hardware deployment-ready agent for trained RL models with low-pass filtering
 
