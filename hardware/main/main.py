@@ -1,4 +1,5 @@
 # Add to imports
+import numpy as np
 import os
 import sys
 import time
@@ -35,7 +36,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Hardware initialization
-imu = MPU6050(roll_offset=0.3)
+imu = MPU6050(roll_offset=0)
 motor = HardwarePWMMotor()
 # Initialize hardware encoder
 encoder = PiEncoder(pin_a=23, pin_b=24)
@@ -57,12 +58,12 @@ except gymnasium.error.Error as e:
         raise e
 
 # Use absolute paths for model files
-ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model.zip')
+ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model_jia.zip')
 dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
 
 # Import controller after environment registration
 from controller_rl import HardwareModelAgent
-controller_rl = HardwareModelAgent(model_type='DQN', model_path=dqn_model_path, env_name='CustomCartPole-v1')
+controller_rl = HardwareModelAgent(model_type='PPO', model_path=ppo_model_path, env_name='CustomCartPole-v1')
 
 logger = DataLogger()
 logger.start()
@@ -89,7 +90,8 @@ try:
             
             dts = datetime.datetime.now()
             # control_output = controller.update(roll_angle, gyro_rate_x)
-            control_output = controller_rl.control([x, x_dot, roll_angle, gyro_rate_x])
+            theta_rad = np.pi*roll_angle/180
+            control_output = controller_rl.control([x, x_dot, theta_rad, gyro_rate_x])
             dte = datetime.datetime.now()
             time4ctrlout = dte-dts
             s = (time4ctrlout.total_seconds())
@@ -104,9 +106,7 @@ try:
             }
             
             motor.set_speed(control_output, x_dot)
-            print('Checkpoint 1')
             logger.log(data)
-            print('Checkpoint 2')
             # -------------------------------------------
             
             print(f'{roll_angle=}')
