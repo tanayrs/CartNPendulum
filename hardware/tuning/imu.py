@@ -20,7 +20,7 @@ class MPU6050:
     ACCEL_SCALE_FACTOR = 16384.0  # for ±2g range
     GYRO_SCALE_FACTOR = 131.0     # for ±250°/s range
     
-    def __init__(self, roll_offset=0.0, address=0x68, bus_num=1):
+    def __init__(self, roll_offset=0, address=0x68, bus_num=1):
         """Initialize the MPU6050 sensor"""
         self.address = address
         self.bus = smbus.SMBus(bus_num)

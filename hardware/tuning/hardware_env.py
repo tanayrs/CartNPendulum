@@ -12,7 +12,7 @@ class HardwareBalancingEnv(gym.Env):
     def __init__(self, max_steps=1000, k = 0.1):
         super(HardwareBalancingEnv, self).__init__()
         # Hardware initialization
-        self.imu = MPU6050(roll_offset=0)
+        self.imu = MPU6050(roll_offset=5)
         self.motor = HardwarePWMMotor()
         self.encoder = PiEncoder(pin_a=23, pin_b=24)
         self.processor = EncoderProcessor(pulses_per_rev=2262)
@@ -46,7 +46,7 @@ class HardwareBalancingEnv(gym.Env):
     def reset(self, seed=None, options=None):
         self.motor.stop()
         self.current_step = 0
-        self.imu = MPU6050(roll_offset=0)
+        self.imu = MPU6050(roll_offset=5)
         self.encoder = PiEncoder(pin_a=23, pin_b=24)
         self.processor = EncoderProcessor(pulses_per_rev=2262)
     
