@@ -62,7 +62,8 @@ ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model_j
 dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
 
 # Use hardware trained model 
-ppo_model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'interrupted_model.zip')
+ppo_model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'final_hardware_model.zip')
+
 
 # Import controller after environment registration
 from controller_rl import HardwareModelAgent
@@ -94,7 +95,8 @@ try:
             dts = datetime.datetime.now()
             # control_output = controller.update(roll_angle, gyro_rate_x)
             theta_rad = np.pi*roll_angle/180
-            control_output = controller_rl.control([x, x_dot, theta_rad, gyro_rate_x])
+            thetadot_rad = np.pi*gyro_rate_x/180
+            control_output = controller_rl.control([x, x_dot, theta_rad, thetadot_rad])
             dte = datetime.datetime.now()
             time4ctrlout = dte-dts
             s = (time4ctrlout.total_seconds())

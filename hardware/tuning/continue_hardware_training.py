@@ -8,7 +8,7 @@ from safety_monitor import SafetyMonitor
 
 # Configuration parameters
 config = {
-    "pretrained_model": "hardware_trained_models/interrupted_model",
+    "pretrained_model": "hardware_trained_models/final_hardware_model",
     "policy": "MlpPolicy",
     "total_timesteps": 50000,  # You can adjust this based on how much additional training you want
     "save_freq": 5000,
@@ -95,12 +95,15 @@ def main():
         
         # Continue training with loaded weights
         print("Calling model.learn()...")
-        model.learn(
-            total_timesteps=config["total_timesteps"],
-            callback=checkpoint_callback,
-            reset_num_timesteps=False,  # Continue timestep counting from pre-trained model
-            tb_log_name="hardware_training"
-        )
+        try:
+            model.learn(
+                total_timesteps=config["total_timesteps"],
+                callback=checkpoint_callback,
+                reset_num_timesteps=False,  # Continue timestep counting from pre-trained model
+                tb_log_name="hardware_training"
+            )
+        except AttributeError:
+            print("Attribute Error has occured")
         
         # Save final model
         model_save_path = f"{config['save_path']}/final_hardware_model"

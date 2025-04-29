@@ -158,7 +158,10 @@ class MPU6050:
     
     def read_temp(self):
         """Read temperature from the sensor in degrees Celsius"""
-        data = self.bus.read_i2c_block_data(self.address, 0x41, 2)
+        try:
+            data = self.bus.read_i2c_block_data(self.address, 0x41, 2)
+        except IOError as e:
+            print(f'IOError has occured: {e}')
         temp = (data[0] << 8) | data[1]
         
         # Convert from two's complement
