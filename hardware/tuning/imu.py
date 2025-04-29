@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 import smbus
 import math
 import time
@@ -102,7 +103,10 @@ class MPU6050:
     
     def read_raw_accel(self):
         """Read raw accelerometer data from the sensor"""
-        data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
+        try:
+            data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
+        except IOError as e:
+            print(f'IOError Occurred: {e}')
         x = (data[0] << 8) | data[1]
         y = (data[2] << 8) | data[3]
         z = (data[4] << 8) | data[5]
@@ -154,7 +158,10 @@ class MPU6050:
     
     def read_temp(self):
         """Read temperature from the sensor in degrees Celsius"""
-        data = self.bus.read_i2c_block_data(self.address, 0x41, 2)
+        try:
+            data = self.bus.read_i2c_block_data(self.address, 0x41, 2)
+        except IOError as e:
+            print(f'IOError has occured: {e}')
         temp = (data[0] << 8) | data[1]
         
         # Convert from two's complement
@@ -207,9 +214,10 @@ class MPU6050:
         # Optionally reset yaw to 0 if needed
         # self.yaw = 0  # Uncomment if you want to reset yaw
         
+        ratio = np.pi/180
         return {
             'accel': {'x': self.acc_x, 'y': self.acc_y, 'z': self.acc_z},
-            'gyro': {'x': self.gyro_x, 'y': self.gyro_y, 'z': self.gyro_z},
-            'angle': {'roll': self.roll - self.roll_offset, 'pitch': self.pitch, 'yaw': self.yaw},
+            'gyro': {'x': self.gyro_x*ratio, 'y': self.gyro_y*ratio, 'z': self.gyro_z*ratio},
+            'angle': {'roll': (self.roll - self.roll_offset)*ratio, 'pitch': self.pitch*ratio, 'yaw': self.yaw*ratio},
             'temp': self.read_temp()
         }

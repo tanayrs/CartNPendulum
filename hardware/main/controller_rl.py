@@ -47,7 +47,7 @@ from stable_baselines3 import PPO, DQN
 import gymnasium as gym
 
 class HardwareModelAgent:
-    def __init__(self, model_type='PPO', model_path=None, env_name=None, filter_alpha=0.4):
+    def __init__(self, model_type='PPO', model_path=None, env_name=None, filter_alpha=0.5):
         """
         Hardware deployment-ready agent for trained RL models with low-pass filtering
 
@@ -85,13 +85,14 @@ class HardwareModelAgent:
             int: Filtered Control Output (PWM)
         """
         action = self.predict_action(state_vector)
+        print(f'{action}')
         raw_output = ((action-20)/20) * 40000
         
         # Apply low-pass filter: y[n] = α * x[n] + (1-α) * y[n-1]
         filtered_output = self.filter_alpha * raw_output + (1 - self.filter_alpha) * self.prev_output
         self.prev_output = filtered_output
 
-        if -12 < state_vector[3] < 12:
+        if -0.2 < state_vector[3] < 0.2:
             filtered_output = 0
         
         return int(filtered_output)
