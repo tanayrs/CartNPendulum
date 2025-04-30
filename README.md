@@ -6,7 +6,8 @@ A Reinforcement Learning project for controlling a Segway. Developed for RO3002:
 
 This repository contains the software and configuration for a physical cart-pendulum (Segway) system that uses reinforcement learning techniques for balance control. The project integrates hardware components with RL algorithms to achieve stable operation.
 
-Please refer to final_report.pdf for Abstract, Related Work, Problem Statement, RL Formulation, Methodology and Results. All multimedia can be found embedded within the multimedia/ folder. 
+Please refer to final_report.pdf for Abstract, Related Work, Problem Statement, RL Formulation, Methodology and Results. All multimedia can be found embedded in the presentation which can be found here: https://www.canva.com/design/DAGmHjjTKhY/rtqvqPNGjQWqAYjptzXznw/edit?utm_content=DAGmHjjTKhY&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton.
+
 ## Repository Structure
 
 - **hardware/** - Hardware interface and control components
