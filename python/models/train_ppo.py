@@ -49,7 +49,7 @@ vec_env = DummyVecEnv([lambda: gym.make(environment_name)])  # SB3 requires vect
 
 # Train PPO with the custom environment
 model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=log_path)  # Initialize PPO with MLP policy
-model.learn(total_timesteps=200000)  # Train for 200k steps
+model.learn(total_timesteps=1000000)  # Train for 10^6 steps
 
 # Save the trained model
 PPO_path = os.path.join("Training", "Saved Models", "PPO_model")  # Path to save model

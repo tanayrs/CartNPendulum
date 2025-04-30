@@ -12,6 +12,7 @@ permalink: https://perma.cc/C9ZM-652R
 
 #imports
 import math
+import csv
 from typing import Optional, Tuple, Union
 import numpy as np
 import gymnasium as gym
@@ -103,6 +104,16 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
 
         self.max_steps = 499  # Maximum number of steps in an episode
         self.step_counter = 0  # Counter for steps taken in the current episode
+        self.global_step_counter = 0  # Global step counter for the entire training session
+
+        # Logging state and rewards
+        self.logging_enabled = True  # You can disable it if needed
+        self.log_file = "Training/Logs/reward_state_log.csv"
+        if self.logging_enabled:
+            # Overwrite existing file and write headers
+            with open(self.log_file, mode="w", newline="\n") as f:
+                writer = csv.writer(f)
+                writer.writerow(["step", "episode_step", "reward", "x", "x_dot", "theta", "theta_dot"])
 
         # CHANGED: Override key parameters of the original Gymnasium CartPole with custom values.
         self.gravity = 10         # Set gravity to custom value.
@@ -135,7 +146,6 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             ],
             dtype=np.float32,
         )
-
 
         # our pwm values go from -40000 to 40000, but that maps to 12V, realistically you can only really 
         # 5.5/0.5 = 11 states, so we can use 0.5V as the low and high values
@@ -230,8 +240,23 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
 
         if self.render_mode == "human":
             self.render()
+        
+        # Log reward and state if logging is enabled
+        if self.logging_enabled:
+            with open(self.log_file, mode="a", newline="\n") as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    self.global_step_counter,
+                    self.step_counter,
+                    reward,
+                    self.state[0],  # x
+                    self.state[1],  # x_dot
+                    self.state[2],  # theta
+                    self.state[3]   # theta_dot
+                ])
 
         self.step_counter += 1
+        self.global_step_counter += 1
         return np.array(self.state, dtype=np.float32), reward, terminated, truncated, {}
 
     def reset(

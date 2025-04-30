@@ -3,6 +3,7 @@ hardware/main/__pycache__/*
 python/env/__pycache__/
 hardware/botenv/
 Logs
+plotting
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
