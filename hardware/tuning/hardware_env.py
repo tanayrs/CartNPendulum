@@ -46,6 +46,7 @@ class HardwareBalancingEnv(gym.Env):
     def reset(self, seed=None, options=None):
         self.motor.stop()
         self.current_step = 0
+        self.imu.close()
         self.imu = MPU6050(roll_offset=5)
         self.encoder = PiEncoder(pin_a=23, pin_b=24)
         self.processor = EncoderProcessor(pulses_per_rev=2262)

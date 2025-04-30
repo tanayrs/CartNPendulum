@@ -8,7 +8,7 @@ from safety_monitor import SafetyMonitor
 
 # Configuration parameters
 config = {
-    "pretrained_model": "../../Training/Saved Models/DQN_model",
+    "pretrained_model": "hardware_trained_models/final_hardware_model",
     "policy": "MlpPolicy",
     "total_timesteps": 50000,  # You can adjust this based on how much additional training you want
     "save_freq": 5000,
