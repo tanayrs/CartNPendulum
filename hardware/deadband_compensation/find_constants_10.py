@@ -156,7 +156,10 @@ def plot_raw_with_measured_constants(path,constants_path):
         plt.plot(row['deadband_starts_inc'],row['kinetic_coeffs_inc'],'o')
         plt.plot(row['deadband_ends_dec'],row['static_coeffs_dec'],'o')
         plt.plot(row['deadband_ends_inc'],row['static_coeffs_inc'],'o')
-    plt.title(path)
+    plt.title('Deadband Measurement')
+    plt.xlabel('Relative Time (s)')
+    plt.ylabel('Input (PWM)')
+
     
     plt.subplot(2,1,2)
     plt.plot(df['Relative time'],df['velocity'])
@@ -165,6 +168,9 @@ def plot_raw_with_measured_constants(path,constants_path):
         plt.axvline(x=row['deadband_ends_dec'],color='k',linestyle='--',linewidth=1)
         plt.axvline(x=row['deadband_starts_inc'],color='k',linestyle='--',linewidth=1)
         plt.axvline(x=row['deadband_ends_inc'],color='k',linestyle='--',linewidth=1)
+
+    plt.xlabel('Relative Time (s)')
+    plt.ylabel('Velocity (rad/s)')
 
     manager = plt.get_current_fig_manager()
     manager.full_screen_toggle()
@@ -183,8 +189,8 @@ def suggest_compensation(constants_path):
 
 if __name__ == '__main__':
     ## Use to Plot a Particular File ##
-    path = "./data/deadband_test_2025-04-21 18:21:50.771442.csv"
-    constants_path = "./coeffs/deadband_test_2025-04-21 18:21:50.771442.csv"
+    path = "hardware/deadband_compensation/deadband_measurement.csv"
+    constants_path = "hardware/deadband_compensation/deadband_coefficients.csv"
     find_constants(path, constants_path)
     plot_raw_with_measured_constants(path,constants_path)
     suggest_compensation(constants_path)
