@@ -4,7 +4,9 @@ python/env/__pycache__/
 hardware/botenv/
 Logs
 plotting
+
 # Byte-compiled / optimized / DLL files
+.DS_Store
 __pycache__/
 *.py[cod]
 *$py.class
