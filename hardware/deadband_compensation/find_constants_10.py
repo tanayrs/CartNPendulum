@@ -1,7 +1,34 @@
-import numpy as np
+# Now the deadband measurement needs to be averaged over multiple samples, so this file reads the deadband measurement code
+# and then averages the deadband measurements over multiple samples.
+
+'''
+Motor Deadband Compensation Analysis
+
+This script analyzes motor behavior data to identify and characterize the motor deadband
+region - the range of input values where the motor doesn't respond due to static friction.
+It processes recorded motor input and velocity data to extract compensation constants that can be used to improve motor control precision
+
+Features:
+- Processes CSV files containing motor input and velocity measurements
+- Automatically detects deadband boundaries by analyzing movement patterns
+- Identifies four critical compensation constants:
+  * static_inc: Value needed to overcome static friction when starting forward motion
+  * static_dec: Value needed to overcome static friction when starting reverse motion
+  * kinetic_inc: Value at which forward motion stops due to friction
+  * kinetic_dec: Value at which reverse motion stops due to friction
+- Visualizes raw data with identified deadband boundaries and transition points
+- Calculates average compensation values across multiple test runs
+- Generates CSV files with extracted constants for use in motor control code
+    
+Output:
+    - CSV file with extracted deadband constants
+    - Visualization of motor input and velocity with marked deadband regions
+    - Console output with suggested compensation values
+'''
+
+# imports
 import pandas as pd
 from matplotlib import pyplot as plt
-import csv
 
 def sign(num):
     if num > 0:
@@ -161,33 +188,3 @@ if __name__ == '__main__':
     find_constants(path, constants_path)
     plot_raw_with_measured_constants(path,constants_path)
     suggest_compensation(constants_path)
-    
-    # TANAY REVIEW THIS
-    ## Use To Create Slope Constants CSV ##
-    # with open(slope_ends_path, "w", newline="\n") as f:
-    #     csv.writer(f, delimiter=',').wrwiterow(['speed', 'motor', 'positive', 'negative'])
-    
-    ## Use to Plot Data of Particular Speeds for Both Motors ##
-    # speeds = [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40]
-    # motors = ['Front']
-    # slope_ends_path = "./Python/deadband coeff/plot constants/SlopeEnds10.csv"
-    
-    # for speed in speeds:
-    #     for motor in motors:
-    #         path = f'./Python/deadband tests/deadband coeff/SourceData10/{motor}Slope{speed}Data.csv' 
-    #         constants_path = f'./Python/deadband tests/deadband coeff/plot constants/CombinedConstants/{motor}Slope{speed}Constants.csv'
-
-    #         plot_raw_with_measured_constants(path,constants_path)
-            # slope_ends = find_constants(path, constants_path)
-
-            # with open(slope_ends_path, "a", newline="\n") as f:
-            #     csv.writer(f, delimiter=',').writerow([speed, motor, slope_ends['positive'], slope_ends['negative']])
-
-    ## Use to Plot Data of Particular Speeds-Motors Combination ##
-    # speeds = [1,5,6,15,25,30,35,40,3,20,25,30,35]
-    # motors = ['Front','Front','Front','Front','Front','Front','Front','Front','Rear','Rear','Rear','Rear','Rear']
-    # for speed,motor in zip(speeds,motors):
-    #     path = f'./Python/deadband tests/deadband coeff/SourceData10/{motor}Slope{speed}Data.csv' 
-    #     constants_path = f'./Python/deadband tests/deadband coeff/plot constants/CombinedConstants/{motor}Slope{speed}Constants.csv'
-
-    #     plot_raw_with_measured_constants(path,constants_path)

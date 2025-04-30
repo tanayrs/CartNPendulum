@@ -1,3 +1,36 @@
+# compare filters of encoder time derivative, explained under motor deadband compensation
+
+'''
+Encoder Velocity Filtering Analysis Script
+
+This script analyzes and compares different moving average filtering techniques for smoothing encoder velocity signals 
+
+Features:
+- Processes raw encoder tick data from CSV files
+- Calculates angular position from encoder ticks
+- Computes angular velocity through time differentiation
+- Adds controlled noise to demonstrate filter effectiveness
+- Applies moving average filters with various window sizes (2, 4, 6, 8)
+- Generates comparative visualizations of filter performance
+- Exports processed data for further analysis
+
+Purpose:
+This analysis helps determine the optimal window size for velocity filtering
+in the encoder processing pipeline. The goal is to balance noise reduction with
+minimizing phase lag, which is critical for real-time control applications.
+
+Visualization:
+- Individual plots for each filter window size
+- Composite plot showing all filters together for direct comparison
+- Side-by-side visualization of noise reduction vs. responsiveness
+    
+Output:
+    - Multi-panel visualization of filter performance
+    - Filtered data saved to 'filtered_velocity_data.csv'
+    - Console output with data summary
+'''
+
+# imports
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

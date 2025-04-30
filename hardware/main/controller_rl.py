@@ -1,3 +1,46 @@
+# RL Controler Class, needed to get actions from RL model
+
+'''
+Reinforcement Learning Controller
+
+This module provides a hardware-friendly interface for deploying trained reinforcement learning models to control the segway system. It handles model loading, state processing, action prediction, and implements signal smoothing for hardware safety.
+
+Features:
+- Loads and executes pre-trained PPO or DQN reinforcement learning models
+- Implements low-pass filtering to smooth control signals for hardware protection
+- Converts discrete actions to continuous control signals suitable for motor control
+- Provides special handling for near-zero velocity states to prevent oscillations
+- Offers clean reset and shutdown capabilities for the control system
+
+Implementation:
+- Loads trained model files (.zip) from stable-baselines3
+- Processes state vectors from hardware sensors (position, velocity, angle, angular velocity)
+- Applies the learned policy to determine optimal control actions
+- Filters the raw control signal for smooth transitions between control outputs
+- Scales the output for direct application to motor PWM control
+
+Usage:
+    # Initialize controller with trained model
+    controller = HardwareModelAgent(
+        model_type='PPO',
+        model_path='/path/to/trained_model.zip',
+        env_name='CustomCartPole-v1',
+        filter_alpha=0.3
+    )
+    
+    # In control loop
+    while running:
+        # Get state from sensors
+        state = [x, x_dot, theta, theta_dot]
+        
+        # Get filtered control output
+        control_output = controller.control(state)
+        
+        # Apply to motor
+        motor.set_speed(control_output)
+'''
+
+# imports
 import os
 import numpy as np
 from stable_baselines3 import PPO, DQN

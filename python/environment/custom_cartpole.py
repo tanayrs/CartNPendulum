@@ -1,6 +1,8 @@
-# This script creates a custom CartPole environment with modified parameters for our problem.
-# The original CartPole environment is based on the classic control problem where a pole is balanced on a cart.
-# The custom environment allows for more flexibility in the dynamics of the system.
+"""
+This script creates a custom CartPole environment with modified parameters for our problem.
+The original CartPole environment is based on the classic control problem where a pole is balanced on a cart.
+The custom environment allows for more flexibility in the dynamics of the system.
+"""
 
 """
 Classic cart-pole system implemented by Rich Sutton et al.
@@ -11,143 +13,111 @@ permalink: https://perma.cc/C9ZM-652R
 #imports
 import math
 from typing import Optional, Tuple, Union
-from numpy import sin, cos
 import numpy as np
 import gymnasium as gym
 from gymnasium import logger, spaces
 from gymnasium.envs.classic_control import utils
 from gymnasium.error import DependencyNotInstalled
+
 # we removed the import of VectorEnv and AutoresetMode as they are not used in this code, and other VectorEnv related code too
 
 
 class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     """
-    Description - NEEDS TO BE REWRITTENFOR OUR WORK
-
-    A pole is attached by an un-actuated joint to a cart, which moves along a frictionless track.
-    The pendulum is placed upright on the cart and the goal is to balance the pole by applying forces
-     in the left and right direction on the cart.
+    Description:
+    A custom cart-pole system based on the classic control problem.
+    A pole is attached by an un-actuated joint to a cart, which moves along a track.
+    The pendulum starts upright, and the goal is to balance the pole by applying forces
+    to the cart.
 
     ## Action Space
-    The action is a `ndarray` with shape `(1,)` which can take values `{0, 1}` indicating the direction
-     of the fixed force the cart is pushed with.
+    The action is a `Discrete(41)` type, allowing for 41 different force values:
+    - Values range from 0 to 40
+    - 20 represents no force
+    - Values < 20 push the cart left (with increasing magnitude)
+    - Values > 20 push the cart right (with increasing magnitude)
+    - Analogous to Voltage Values from -12V to +12V in 0.6 V Increments
 
-    - 0: Push cart to the left
-    - 1: Push cart to the right
-
-    **Note**: The velocity that is reduced or increased by the applied force is not fixed and it depends on the angle
-     the pole is pointing. The center of gravity of the pole varies the amount of energy needed to move the cart underneath it - FIND WAY TO STILL CHECK OR THIS ISSUE
+    The force is calculated as: force = (force_mag/20)*(action-20) based on the rated torque of the motor.
 
     ## Observation Space
-
-    The observation is a `ndarray` with shape `(4,)` with the values corresponding to the following positions and velocities:
+    The observation is a `ndarray` with shape `(4,)` with the values corresponding to:
 
     | Num | Observation           | Min                 | Max               |
     |-----|-----------------------|---------------------|-------------------|
     | 0   | Cart Position         | -4.8                | 4.8               |
     | 1   | Cart Velocity         | -Inf                | Inf               |
-    | 2   | Pole Angle            | ~ -0.418 rad (-24°) | ~ 0.418 rad (24°) |
+    | 2   | Pole Angle            | ~ -0.21 rad (-12°)  | ~ 0.21 rad (12°)  |
     | 3   | Pole Angular Velocity | -Inf                | Inf               |
 
-    **Note:** While the ranges above denote the possible values for observation space of each element,
-        it is not reflective of the allowed values of the state space in an unterminated episode. Particularly:
-    -  The cart x-position (index 0) can be take values between `(-4.8, 4.8)`, but the episode terminates
-       if the cart leaves the `(-2.4, 2.4)` range.
-    -  The pole angle can be observed between  `(-.418, .418)` radians (or **±24°**), but the episode terminates
-       if the pole angle is not in the range `(-.2095, .2095)` (or **±12°**)
-
     ## Rewards
-    Since the goal is to keep the pole upright for as long as possible, by default, a reward of `+1` is given for every step taken, including the termination step. The default reward threshold is 500 for v1 and 200 for v0 due to the time limit on the environment.
-
-    If `sutton_barto_reward=True`, then a reward of `0` is awarded for every non-terminating step and `-1` for the terminating step. As a result, the reward threshold is 0 for v0 and v1.
+    Two reward systems are implemented:
+    1. State-action based reward (default): 
+       - Reward = math.cos(theta)^2 - lambda_theta * action_penalty
+       - Rewards proper balancing while penalizing excessive actions
+    
+    2. Sutton-Barto reward (optional):
+       - +1 for each step if the pole is upright
+       - -1 when the episode terminates due to pole falling
 
     ## Starting State
-    All observations are assigned a uniformly random value in `(-0.05, 0.05)`
+    All observations are assigned a uniformly random value in `(-0.2, 0.2)`
 
     ## Episode End
     The episode ends if any one of the following occurs:
-
     1. Termination: Pole Angle is greater than ±12°
-    2. Termination: Cart Position is greater than ±2.4 (center of the cart reaches the edge of the display)
-    3. Truncation: Episode length is greater than 500 (200 for v0)
+    2. Termination: Cart Position is greater than ±2.4
+    3. Truncation: Episode length exceeds 500 steps
+
+    ## Custom Physics Parameters
+    This implementation uses custom physical parameters:
+    - Pole mass: 0.841 kg
+    - Distance to center-of-mass: 0.2 m
+    - Custom gravity: 10 m/s²
+    - Custom time scale: 0.1 (10 ms)
+    - Custom viscous drag coefficient: 0.4
+    
+    The dynamics are implemented using detailed equations of motion that account for
+    these physical parameters.
 
     ## Arguments
-
-    Cartpole only has `render_mode` as a keyword for `gymnasium.make`.
-    On reset, the `options` parameter allows the user to change the bounds used to determine the new random state.
-
-    ```python
-    >>> import gymnasium as gym
-    >>> env = gym.make("CartPole-v1", render_mode="rgb_array")
-    >>> env
-    <TimeLimit<OrderEnforcing<PassiveEnvChecker<CartPoleEnv<CartPole-v1>>>>>
-    >>> env.reset(seed=123, options={"low": -0.1, "high": 0.1})  # default low=-0.05, high=0.05
-    (array([ 0.03647037, -0.0892358 , -0.05592803, -0.06312564], dtype=float32), {})
-
-    ```
-
-    | Parameter               | Type       | Default                 | Description                                                                                   |
-    |-------------------------|------------|-------------------------|-----------------------------------------------------------------------------------------------|
-    | `sutton_barto_reward`   | **bool**   | `False`                 | If `True` the reward function matches the original sutton barto implementation                |
-
-    ## Vectorized environment
-
-    To increase steps per seconds, users can use a custom vector environment or with an environment vectorizor.
-
-    ```python
-    >>> import gymnasium as gym
-    >>> envs = gym.make_vec("CartPole-v1", num_envs=3, vectorization_mode="vector_entry_point")
-    >>> envs
-    CartPoleVectorEnv(CartPole-v1, num_envs=3)
-    >>> envs = gym.make_vec("CartPole-v1", num_envs=3, vectorization_mode="sync")
-    >>> envs
-    SyncVectorEnv(CartPole-v1, num_envs=3)
-
-    ```
-
-    ## Version History
-    * v1: `max_time_steps` raised to 500.
-        - In Gymnasium `1.0.0a2` the `sutton_barto_reward` argument was added
-    * v0: Initial versions release.
+    | Parameter             | Type     | Default | Description                                      |
+    |-----------------------|----------|---------|--------------------------------------------------|
+    | `sutton_barto_reward` | **bool** | `False` | Use Sutton-Barto reward instead of state-action  |
+    | `render_mode`         | **str**  | `None`  | Rendering mode ('human' or 'rgb_array')          |
     """
 
-    metadata ={
-        "render_modes": ["human", "rgb_array"],
-        "render_fps": 24,
+    metadata = {
+        "render_modes": ["human", "rgb_array"],  # Available rendering modes: human for live display, rgb_array for numpy array
+        "render_fps": 24,  # Frames per second for display when rendering
     }
 
     def __init__(
-        self, sutton_barto_reward: bool = False, render_mode: Optional[str] = None
+        self, sutton_barto_reward: bool = False, render_mode: Optional[str] = None,
+        reward_type: str = "state_action"
     ):
-        self._sutton_barto_reward = sutton_barto_reward
-        self.state_action_reward = True  # If True, the reward is based on the state and action taken
+        self.reward_type = reward_type
+        #self._sutton_barto_reward = sutton_barto_reward
+        #self.state_action_reward = True  # If True, the reward is based on the state and action taken
         self.k = 0.1  # Hyperparameter for action penalty in reward function
 
-        self.max_steps = 500  # Maximum number of steps in an episode
+        self.max_steps = 499  # Maximum number of steps in an episode
         self.step_counter = 0  # Counter for steps taken in the current episode
 
-        # CHANGED: Define custom parameters using MATLAB syntax variable names and values.
-        self.p_m = 0.841           # kg, mass of the pole
-        self.p_d = 0.2             # m, distance to center-of-mass (CoM) of the pole
-        self.p_dw = 0.075          # Custom parameter (e.g., wheel distance)
-        self.p_R_wheel = 0.05      # m, radius of the wheel
-        self.p_g = 10              # gravity (m/s^2)
-        self.p_time_scale = 0.1    # time scale factor for integration
-        self.p_rated_torque = 25 * self.p_g / 100  # Rated Torque (calculated from gravity)
-        self.max_force = self.p_rated_torque / self.p_R_wheel
-        self.Ig = 0                # Mass Moment of Inertia about mass (if applicable)
-        self.p_I = (self.p_m * (self.p_d ** 2)) + self.Ig  # Total inertia about the center-of-mass
-        self.p_b = 0.4             # Viscous drag coefficient
-
         # CHANGED: Override key parameters of the original Gymnasium CartPole with custom values.
-        self.gravity = self.p_g          # Set gravity to custom value.
-        self.masspole = self.p_m         # Use custom pole mass.
+        self.gravity = 10         # Set gravity to custom value.
+        self.masspole = 0.841           # kg, mass of the pole
         self.masscart = 1.0              # Retaining the default cart mass (can be modified if needed).
         self.total_mass = self.masspole + self.masscart
-        self.length = self.p_d           # Use custom length (distance to CoM).
+        self.length = 0.2             # m, distance to center-of-mass (CoM) of the pole
+        self.p_dw = 0.075          # Custom parameter (e.g., wheel distance)
+        self.p_R_wheel = 0.05      # m, radius of the wheel
+        self.p_rated_torque = 25 * self.gravity / 100  # Rated Torque (calculated from gravity)
+        self.Ig = 0                # Mass Moment of Inertia about mass (if applicable)
+        self.p_I = (self.masspole * (self.length** 2)) + self.Ig  # Total inertia about the center-of-mass
+        self.p_b = 0.4     
         self.polemass_length = self.masspole * self.length
-        self.tau = self.p_time_scale     # Use custom time scale for integration.
-        self.force_mag = self.max_force  # Use custom force magnitude
+        self.force_mag = self.p_rated_torque / self.p_R_wheel  # Use custom force magnitude
         self.tau = 0.01  # seconds between state updates
         self.kinematics_integrator = "semi-implicit euler"
 
@@ -183,33 +153,33 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         self.steps_beyond_terminated = None
 
     def step(self, action):
+        # Validate that the action is within the defined action space
         assert self.action_space.contains(
             action
         ), f"{action!r} ({type(action)}) invalid"
+        # Ensure environment has been reset before stepping
         assert self.state is not None, "Call reset before using step method."
+        # Extract individual state components
         x, x_dot, theta, theta_dot = self.state
         
-        force = (self.max_force/20)*(action-20)
+        # Calculate force applied to cart based on action (scaled linearly around the midpoint 20)
+        force = (self.force_mag/20)*(action-20)
 
         # print(f'Custom step function called with {action=}')
 
-        d = self.length
-        m = self.masscart
-        g = self.gravity
-        b = self.p_b
-        I = self.p_I
-        # CHANGED: Using the custom parameters for the dynamics calculation.
+        # Define physical constants for equations of motion
+        d = self.length           # Distance to center of mass of pole
+        m = self.masscart         # Mass of the cart
+        g = self.gravity          # Gravitational acceleration
+        b = self.p_b              # Viscous drag coefficient
+        I = self.p_I              # Moment of inertia of the pole
 
-        # xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
-        #         (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta) + x_dot*b*(d**2)*m*(cos(theta)**2))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
+        # Calculate cart acceleration (xacc) using the equation of motion derived from Lagrangian mechanics
+        xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*math.sin(2*theta))/2 - 
+       (d**3)*(m**2)*(theta_dot**2)*math.sin(theta) - I*d*m*(theta_dot**2)*math.sin(theta))/(m*(I + (d**2)*m - (d**2)*m*(math.cos(theta)**2)))
 
-        # thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta)))/(I + (d**2)*m*(sin(theta)**2))
-
-        # Corrected equations of motion
-        xacc = (force*I - I*x_dot*b + force*(d**2)*m - x_dot*b*(d**2)*m + ((d**2)*g*(m**2)*sin(2*theta))/2 - 
-       (d**3)*(m**2)*(theta_dot**2)*sin(theta) - I*d*m*(theta_dot**2)*sin(theta))/(m*(I + (d**2)*m - (d**2)*m*(cos(theta)**2)))
-
-        thetaacc = (d*(- d*m*cos(theta)*sin(theta)*(theta_dot**2) + force*cos(theta) + g*m*sin(theta) - b*x_dot*cos(theta)))/(I + (d**2)*m*(sin(theta)**2))
+        # Calculate angular acceleration of the pole (thetaacc) using the equation of motion
+        thetaacc = (d*(- d*m*math.cos(theta)*math.sin(theta)*(theta_dot**2) + force*math.cos(theta) + g*m*math.sin(theta) - b*x_dot*math.cos(theta)))/(I + (d**2)*m*(math.sin(theta)**2))
 
 
         if self.kinematics_integrator == "semi-implicit euler":  # semi-implicit euler
@@ -236,18 +206,18 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         truncated = self.step_counter >= self.max_steps
 
         if not terminated:
-            if self.state_action_reward:
+            if self.reward_type == "state_action":
                 # Use custom state-action reward
                 action_penalty = (action - 20)**2
                 lambda_theta = self.k * (1 - abs(math.cos(theta)))
                 reward = math.cos(theta)**2 - lambda_theta * action_penalty
             else:
-                reward = 0.0 if self._sutton_barto_reward else 1.0
+                reward = 0.0 #if self._sutton_barto_reward else 1.0
 
         elif self.steps_beyond_terminated is None:
             # Pole just fell!
             self.steps_beyond_terminated = 0
-            reward = -1.0 if self._sutton_barto_reward else 1.0
+            reward = -1.0 #if self._sutton_barto_reward else 1.0
 
         else:
             if self.steps_beyond_terminated == 0:
@@ -262,7 +232,6 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             self.render()
 
         self.step_counter += 1
-        # truncation=False as the time limit is handled by the `TimeLimit` wrapper added during `make`
         return np.array(self.state, dtype=np.float32), reward, terminated, truncated, {}
 
     def reset(
@@ -271,22 +240,34 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
         seed: Optional[int] = None,
         options: Optional[dict] = None,
     ):
+        # Initialize random number generator with the provided seed
         super().reset(seed=seed)
-        # Note that if you use custom reset bounds, it may lead to out-of-bound
-        # state/observations.
+        
+        # Parse reset bounds from options or use defaults (-0.2, 0.2)
+        # These bounds determine the initial randomization of the environment state
         low, high = utils.maybe_parse_reset_bounds(
-            options, -0.2, 0.2  # default low
-        )  # default high
+            options, -0.2, 0.2  # default low - small random initial values
+        )  # default high - prevents large initial deviations
+        
+        # Initialize state with random values: [cart_position, cart_velocity, pole_angle, pole_angular_velocity]
+        # Small initial values ensure the pendulum starts near upright position
         self.state = self.np_random.uniform(low=low, high=high, size=(4,))
+        
+        # Reset termination tracking variable
         self.steps_beyond_terminated = None
 
+        # Display initial state if human rendering is enabled
         if self.render_mode == "human":
             self.render()
 
+        # Reset step counter for new episode
         self.step_counter = 0
+        
+        # Return initial observation and empty info dictionary
         return np.array(self.state, dtype=np.float32), {}
 
     def render(self):
+        # Return if no render mode is specified
         if self.render_mode is None:
             assert self.spec is not None
             gym.logger.warn(
@@ -296,6 +277,7 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             )
             return
 
+        # Import pygame for rendering, raise error if not installed
         try:
             import pygame
             from pygame import gfxdraw
@@ -304,42 +286,57 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
                 'pygame is not installed, run `pip install "gymnasium[classic-control]"`'
             ) from e
 
+        # Initialize pygame and create screen if not already done
         if self.screen is None:
             pygame.init()
             if self.render_mode == "human":
+                # Create visible window for human viewing
                 pygame.display.init()
                 self.screen = pygame.display.set_mode(
                     (self.screen_width, self.screen_height)
                 )
             else:  # mode == "rgb_array"
+                # Create offscreen surface for array output
                 self.screen = pygame.Surface((self.screen_width, self.screen_height))
+        
+        # Initialize clock for controlling frame rate if not already done
         if self.clock is None:
             self.clock = pygame.time.Clock()
 
-        world_width = self.x_threshold * 2
-        scale = self.screen_width / world_width
-        polewidth = 10.0
-        polelen = scale * (2 * self.length)
-        cartwidth = 50.0
-        cartheight = 20.0
+        # Calculate scaling parameters
+        world_width = self.x_threshold * 2  # Total width of the world in physics units
+        scale = self.screen_width / world_width  # Conversion factor from physics to pixels
+        polewidth = 10.0  # Width of the pole in pixels
+        polelen = scale * (2 * self.length)  # Length of the pole in pixels (scaled from physics)
+        cartwidth = 50.0  # Width of the cart in pixels
+        cartheight = 20.0  # Height of the cart in pixels
 
+        # Return None if state is not initialized
         if self.state is None:
             return None
 
+        # Extract state vector
         x = self.state
-
+        
+        # Initialize rendering surface if needed
         self.surf = pygame.Surface((self.screen_width, self.screen_height))
+        
+        # Fill background with white
         self.surf.fill((255, 255, 255))
 
-        l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
-        axleoffset = cartheight / 4.0
-        cartx = x[0] * scale + self.screen_width / 2.0  # MIDDLE OF CART
-        carty = 100  # TOP OF CART
-        cart_coords = [(l, b), (l, t), (r, t), (r, b)]
-        cart_coords = [(c[0] + cartx, c[1] + carty) for c in cart_coords]
-        gfxdraw.aapolygon(self.surf, cart_coords, (0, 0, 0))
-        gfxdraw.filled_polygon(self.surf, cart_coords, (0, 0, 0))
+        # Define cart coordinates
+        l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2  # Left, right, top, bottom
+        axleoffset = cartheight / 4.0  # Offset for the axle from top of cart
+        cartx = x[0] * scale + self.screen_width / 2.0  # Calculate cart x position (physics to pixels)
+        carty = 100  # Fixed cart y position (top of cart)
+        
+        # Draw the cart as a black rectangle
+        cart_coords = [(l, b), (l, t), (r, t), (r, b)]  # Corners of the cart
+        cart_coords = [(c[0] + cartx, c[1] + carty) for c in cart_coords]  # Translate to correct position
+        gfxdraw.aapolygon(self.surf, cart_coords, (0, 0, 0))  # Draw anti-aliased outline
+        gfxdraw.filled_polygon(self.surf, cart_coords, (0, 0, 0))  # Fill with black
 
+        # Define pole coordinates (brown rectangle)
         l, r, t, b = (
             -polewidth / 2,
             polewidth / 2,
@@ -347,14 +344,18 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             -polewidth / 2,
         )
 
+        # Calculate pole position accounting for rotation
         pole_coords = []
         for coord in [(l, b), (l, t), (r, t), (r, b)]:
-            coord = pygame.math.Vector2(coord).rotate_rad(-x[2])
-            coord = (coord[0] + cartx, coord[1] + carty + axleoffset)
+            coord = pygame.math.Vector2(coord).rotate_rad(-x[2])  # Rotate by negative of pole angle
+            coord = (coord[0] + cartx, coord[1] + carty + axleoffset)  # Position relative to cart axle
             pole_coords.append(coord)
-        gfxdraw.aapolygon(self.surf, pole_coords, (202, 152, 101))
-        gfxdraw.filled_polygon(self.surf, pole_coords, (202, 152, 101))
+        
+        # Draw the pole (brown color)
+        gfxdraw.aapolygon(self.surf, pole_coords, (202, 152, 101))  # Anti-aliased outline
+        gfxdraw.filled_polygon(self.surf, pole_coords, (202, 152, 101))  # Fill with brown
 
+        # Draw the axle as a blue circle
         gfxdraw.aacircle(
             self.surf,
             int(cartx),
@@ -370,24 +371,33 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
             (129, 132, 203),
         )
 
+        # Draw the ground as a black horizontal line
         gfxdraw.hline(self.surf, 0, self.screen_width, carty, (0, 0, 0))
 
+        # Flip the surface vertically to match the physics coordinates (y-up)
         self.surf = pygame.transform.flip(self.surf, False, True)
+        
+        # Copy the rendered scene to the display surface
         self.screen.blit(self.surf, (0, 0))
+        
+        # Handle specific render mode outputs
         if self.render_mode == "human":
+            # Process events, maintain framerate, and update the window
             pygame.event.pump()
             self.clock.tick(self.metadata["render_fps"])
             pygame.display.flip()
 
         elif self.render_mode == "rgb_array":
+            # Return the rendered frame as a numpy array for RL algorithms
             return np.transpose(
                 np.array(pygame.surfarray.pixels3d(self.screen)), axes=(1, 0, 2)
             )
 
     def close(self):
+        # Clean up resources when environment is closed
         if self.screen is not None:
-            import pygame
-
-            pygame.display.quit()
-            pygame.quit()
-            self.isopen = False
+            import pygame  # Import pygame for cleanup
+            
+            pygame.display.quit()  # Close the display window
+            pygame.quit()  # Terminate all pygame modules
+            self.isopen = False  # Mark environment as closed

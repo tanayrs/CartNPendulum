@@ -1,3 +1,45 @@
+# main file for encoder characterisation
+
+'''
+Encoder Characterization
+
+This script characterizes the quadrature encoder response by running the motor at a 
+constant speed and measuring the encoder ticks over time. It provides valuable data 
+for calibrating the relationship between motor input and encoder output
+
+Features:
+- Real-time process scheduling for precise timing measurements
+- Constant-speed motor control with hardware PWM
+- High-frequency encoder tick sampling
+- CPU core isolation for consistent timing performance
+- Graceful signal handling to ensure proper hardware shutdown
+- Continuous monitoring of encoder position changes
+
+Purpose:
+This characterization helps establish the relationship between motor input and 
+encoder response, which is essential for accurate position and velocity control.
+The data collected can be used to:
+- Calibrate the encoder tick-to-distance conversion
+- Identify potential mechanical issues (slippage, friction points)
+- Validate encoder resolution and consistency
+
+Usage:
+    sudo python main.py
+    
+    # Press Ctrl+C to stop data collection and display final results
+
+Output:
+    - Periodic console updates showing encoder tick changes
+    - Final encoder tick count upon termination
+    - Timestamp-based tracking of position changes
+
+Requirements:
+    - Raspberry Pi with properly connected motor and encoder
+    - Root privileges for real-time scheduling (run with sudo)
+    - Pre-configured hardware pins (default: PWM=18, DIR=16, ENC_A=23, ENC_B=24)
+'''
+
+# imports
 import os
 import time
 from motor import HardwarePWMMotor
