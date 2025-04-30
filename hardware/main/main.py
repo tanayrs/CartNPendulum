@@ -81,7 +81,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Hardware initialization
-imu = MPU6050(roll_offset=5.5)
+imu = MPU6050(roll_offset=2.5)
 motor = HardwarePWMMotor()
 # Initialize hardware encoder
 encoder = PiEncoder(pin_a=23, pin_b=24)
@@ -108,10 +108,10 @@ except gymnasium.error.Error as e:
 
 
 # Use hardware trained model 
-model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'final_hardware_model.zip')
+model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'final_hardware_model_PPO.zip')
 
 from controller_rl import HardwareModelAgent
-controller_rl = HardwareModelAgent(model_type='DQN', model_path=model_path, env_name='CustomCartPole-v1')
+controller_rl = HardwareModelAgent(model_type='PPO', model_path=model_path, env_name='CustomCartPole-v1')
 
 logger = DataLogger()  # Initialize data logger
 logger.start()  # Start logging thread
