@@ -81,15 +81,15 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Hardware initialization
-imu = MPU6050(roll_offset=0)  # Initialize IMU with zero roll offset
-motor = HardwarePWMMotor()  # Initialize motor control
-# Initialize hardware encoder for cart position tracking
-encoder = PiEncoder(pin_a=23, pin_b=24)  # GPIO pins for encoder signals
-# Initialize data processor for encoder pulses
-processor = EncoderProcessor(pulses_per_rev=2262)  # Encoder resolution
-controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)  # PID controller parameters
+imu = MPU6050(roll_offset=7)
+motor = HardwarePWMMotor()
+# Initialize hardware encoder
+encoder = PiEncoder(pin_a=23, pin_b=24)
+# Initialize data processor
+processor = EncoderProcessor(pulses_per_rev=2262)
+controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)
 
-# Register the custom environment for RL agent
+# Register the custom environment
 try:
     register(
         id="CustomCartPole-v1",
@@ -103,15 +103,15 @@ except gymnasium.error.Error as e:
         raise e
 
 # Use absolute paths for model files
-ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model_jia.zip')
-dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
+# ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model_jia.zip')
+# dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
 
 
 # Use hardware trained model 
-ppo_model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'final_hardware_model.zip')
+model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'final_hardware_model.zip')
 
 from controller_rl import HardwareModelAgent
-controller_rl = HardwareModelAgent(model_type='PPO', model_path=ppo_model_path, env_name='CustomCartPole-v1')
+controller_rl = HardwareModelAgent(model_type='DQN', model_path=model_path, env_name='CustomCartPole-v1')
 
 logger = DataLogger()  # Initialize data logger
 logger.start()  # Start logging thread

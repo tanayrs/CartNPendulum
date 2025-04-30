@@ -1,7 +1,7 @@
 import os
 import signal
 import time
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DQN
 from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback
 from hardware_env import HardwareBalancingEnv
 from safety_monitor import SafetyMonitor
@@ -16,6 +16,8 @@ config = {
     "save_path": "hardware_trained_models",
     "learning_rate": 0.0003,  # Lower learning rate for fine-tuning
 }
+
+MODEL = "DQN"
 
 def setup_signal_handlers(env, model, safety_monitor=None):
     """Set up signal handlers for graceful shutdown"""
@@ -33,21 +35,33 @@ def load_pretrained_model(model_path, env):
     """Load a pre-trained model and adapt it to the new environment"""
     print(f"Loading pre-trained model from {model_path}...")
     try:
-        # First try normal loading
-        return PPO.load(model_path, env=env)
+        if MODEL == "PPO":
+            return PPO.load(model_path, env=env)
+        elif MODEL == "DQN":
+            return DQN.load(model_path, env=env)
     except (ValueError, KeyError) as e:
         print(f"Standard loading failed: {e}")
         print("Attempting to load with custom objects...")
-        # If that fails, try with custom_objects to handle differences
-        return PPO.load(
-            model_path, 
-            env=env, 
-            custom_objects={
-                "learning_rate": config["learning_rate"],
-                "clip_range": lambda _: 0.2,
-                "n_steps": 2048,
-            }
-        )
+        if MODEL == "PPO":
+            return PPO.load(
+                model_path, 
+                env=env, 
+                custom_objects={
+                    "learning_rate": config["learning_rate"],
+                    "clip_range": lambda _: 0.2,
+                    "n_steps": 2048,
+                }
+            )
+        elif MODEL == "DQN":
+            return DQN.load(
+                model_path, 
+                env=env, 
+                custom_objects={
+                    "learning_rate": config["learning_rate"],
+                    "clip_range": lambda _: 0.2,
+                    "n_steps": 2048,
+                }
+            )
 def main():
     print("Initializing hardware environment...")
     # Create hardware environment

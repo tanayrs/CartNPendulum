@@ -20,7 +20,7 @@ class MPU6050:
     ACCEL_SCALE_FACTOR = 16384.0  # for ±2g range
     GYRO_SCALE_FACTOR = 131.0     # for ±250°/s range
     
-    def __init__(self, roll_offset=0.0, address=0x68, bus_num=1):
+    def __init__(self, roll_offset=0, address=0x68, bus_num=1):
         """Initialize the MPU6050 sensor"""
         self.address = address
         self.bus = smbus.SMBus(bus_num)
@@ -44,6 +44,24 @@ class MPU6050:
         # Wake up the MPU6050
         self.bus.write_byte_data(self.address, self.POWER_MGMT_1, 0)
         print("MPU6050 initialized")
+
+    def __del__(self):
+        """Destructor to clean up resources when the object is deleted"""
+        try:
+            if hasattr(self, 'bus'):
+                self.bus.close()
+                print("MPU6050 bus connection closed")
+        except Exception as e:
+            print(f"Error closing MPU6050 bus connection: {e}")
+
+    def close(self):
+        """Explicitly close the bus connection"""
+        try:
+            self.bus.close()
+            print("MPU6050 bus connection closed")
+        except Exception as e:
+            print(f"Error closing MPU6050 bus connection: {e}")
+
     
     def calibrate(self, samples=200):
         """Calculate sensor offsets"""
@@ -105,21 +123,21 @@ class MPU6050:
         """Read raw accelerometer data from the sensor"""
         try:
             data = self.bus.read_i2c_block_data(self.address, self.ACCEL_XOUT_H, 6)
+            x = (data[0] << 8) | data[1]
+            y = (data[2] << 8) | data[3]
+            z = (data[4] << 8) | data[5]
+        
+            # Convert from two's complement
+            if x > 0x7FFF:
+                x -= 0x10000
+            if y > 0x7FFF:
+                y -= 0x10000
+            if z > 0x7FFF:
+                z -= 0x10000
+            return [x, y, z]
         except IOError as e:
             print(f'IOError Occurred: {e}')
-        x = (data[0] << 8) | data[1]
-        y = (data[2] << 8) | data[3]
-        z = (data[4] << 8) | data[5]
-        
-        # Convert from two's complement
-        if x > 0x7FFF:
-            x -= 0x10000
-        if y > 0x7FFF:
-            y -= 0x10000
-        if z > 0x7FFF:
-            z -= 0x10000
-            
-        return [x, y, z]
+            return [0,0,0]
     
     def read_raw_gyro(self):
         """Read raw gyroscope data from the sensor"""
@@ -160,16 +178,18 @@ class MPU6050:
         """Read temperature from the sensor in degrees Celsius"""
         try:
             data = self.bus.read_i2c_block_data(self.address, 0x41, 2)
+            temp = (data[0] << 8) | data[1]
+        
+            # Convert from two's complement
+            if temp > 0x7FFF:
+                temp -= 0x10000
+            
+            # Formula from datasheet
+            return (temp / 340.0) + 36.53
+
         except IOError as e:
             print(f'IOError has occured: {e}')
-        temp = (data[0] << 8) | data[1]
-        
-        # Convert from two's complement
-        if temp > 0x7FFF:
-            temp -= 0x10000
-            
-        # Formula from datasheet
-        return (temp / 340.0) + 36.53
+            return 0
     
     def get_angles_accelerometer(self):
         """Calculate angles from accelerometer data only"""
