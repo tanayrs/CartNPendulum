@@ -81,7 +81,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Hardware initialization
-imu = MPU6050(roll_offset=7)
+imu = MPU6050(roll_offset=5.5)
 motor = HardwarePWMMotor()
 # Initialize hardware encoder
 encoder = PiEncoder(pin_a=23, pin_b=24)
