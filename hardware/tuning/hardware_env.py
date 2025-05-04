@@ -1,3 +1,13 @@
+'''
+Hardware Environment Interface for Cart-Pendulum Balancing System
+
+This module implements a Gymnasium (gym) environment for a segway system. It interfaces with real hardware components including:
+- IMU (MPU6050) for angle/rotation measurement
+- Motor controller for cart movement
+- Rotary encoder for tracking cart position
+'''
+
+# imports
 import gymnasium as gym
 import numpy as np
 from gymnasium import spaces

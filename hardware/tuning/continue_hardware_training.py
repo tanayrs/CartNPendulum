@@ -1,3 +1,9 @@
+# Hardware RL Model Fine-Tuning Script
+# This script continues training of a pre-trained reinforcement learning model
+# on a physical hardware balancing system. It includes safety monitoring,
+# graceful interruption handling, and checkpoint saving during training.
+
+# imports
 import os
 import signal
 import time

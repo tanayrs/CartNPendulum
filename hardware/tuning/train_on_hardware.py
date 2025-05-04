@@ -1,3 +1,10 @@
+'''
+This script sets up and executes reinforcement learning training on physical hardware
+using the HardwareBalancingEnv environment. It configures the algorithm with appropriate
+parameters for hardware training, implements checkpoint saving, and handles termination when interrupted to ensure model preservation.
+'''
+
+# imports
 import os
 import signal
 from stable_baselines3 import PPO
@@ -51,4 +58,3 @@ if __name__ == "__main__":
     if not os.path.exists(config["save_path"]):
         os.makedirs(config["save_path"])
     main()
-

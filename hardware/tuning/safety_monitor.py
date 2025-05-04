@@ -1,5 +1,18 @@
+'''
+Safety monitoring system
+
+This module implements a safety monitor that runs in a separate thread to
+continuously check the state of the cart-pendulum environment. If the cart
+position or pendulum angle exceeds specified safety thresholds, the motor
+is automatically stopped to prevent damage to the hardware.
+
+it runs as a daemon thread that can be started and stopped
+alongside the main control program.
+'''
+
+# imports
 import threading
-import time
+#import time
 from motor import HardwarePWMMotor
 
 class SafetyMonitor(threading.Thread):

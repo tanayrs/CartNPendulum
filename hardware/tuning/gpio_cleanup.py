@@ -1,8 +1,16 @@
+'''
+GPIO Cleanup Utility for Raspberry Pi
+This script provides functionality to reset and clean up all GPIO pins on a Raspberry Pi,
+ensuring that no pins remain active after program termination. It handles both standard
+GPIO pins using RPi.GPIO and hardware PWM pins using pigpio.
+'''
+
 #!/usr/bin/env python3
 
+# imports
 import RPi.GPIO as GPIO
 import pigpio
-import time
+#import time
 
 def cleanup_all_gpio():
     print("Cleaning up all GPIO pins...")
