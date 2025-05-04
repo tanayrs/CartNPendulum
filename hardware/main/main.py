@@ -1,5 +1,3 @@
-# Main file for the hardware deployment of the Cart-Pole system
-
 '''
 Main Control Script
 

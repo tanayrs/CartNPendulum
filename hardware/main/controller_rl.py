@@ -1,5 +1,3 @@
-# RL Controler Class, needed to get actions from RL model
-
 '''
 Reinforcement Learning Controller
 

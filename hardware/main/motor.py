@@ -1,4 +1,3 @@
-# If you delete, motor no go
 '''
 Hardware PWM Motor Control Module for Raspberry Pi
 

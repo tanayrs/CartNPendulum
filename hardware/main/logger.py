@@ -1,5 +1,3 @@
-# Datalogger for main deployment, saves trace of episodes
-
 '''
 Data Logging Module
 

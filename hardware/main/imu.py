@@ -1,5 +1,3 @@
-# Class to measure theta and theta_dot using MPU6050
-
 '''
 MPU6050 IMU Sensor Interface Module
 

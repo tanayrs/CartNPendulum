@@ -1,4 +1,3 @@
-# Test to check motor and encoder functionality
 '''
 Motor and Encoder Testing Script for Cart-Pendulum System
 

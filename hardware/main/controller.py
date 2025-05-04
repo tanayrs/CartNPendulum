@@ -1,5 +1,3 @@
-# PID controller class for baseline
-
 '''
 PID Controller
 

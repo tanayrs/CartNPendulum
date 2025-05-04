@@ -1,5 +1,3 @@
-# Class to read x and xdot from Encoder
-
 '''
 Quadrature Encoder Interface
 
