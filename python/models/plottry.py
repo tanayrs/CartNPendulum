@@ -1,3 +1,6 @@
+# code to plot PPO training convergence metrics from TensorBoard logs
+
+# imports
 import os
 import numpy as np
 import matplotlib.pyplot as plt

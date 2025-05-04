@@ -52,10 +52,4 @@ dqn_path = os.path.join('Training', 'Saved Models', 'DQN_model')  # Path to save
 os.makedirs(os.path.dirname(dqn_path), exist_ok=True)  # Create directory if it doesn't exist
 model.save(dqn_path)  # Save model to disk
 
-# Reload the model (using the same environment)
-# model = DQN.load(dqn_path, env=environment)  # Load model from disk
-
-# Evaluate the policy over 10 episodes with rendering enabled (if your setup supports rendering)
-# evaluate_policy(model, environment, n_eval_episodes=10, render=True)  # Run 10 test episodes
-
 environment.close()  # Clean up environment resources

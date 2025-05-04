@@ -63,8 +63,7 @@ for episode in range(1, episodes + 1):
     print(f"Starting episode {episode}...")
     print(f"Initial theta: {np.degrees(theta0):.2f} deg, Initial x: {x0:.2f} m")
     while not terminated and not truncated:
-        # Optional: call env.render() if needed
-        # (Note: some Gymnasium environments automatically update the display in 'human' mode)
+        # call env.render() if needed
         env.render()
         # Get action from the model (deterministic=True for consistent behavior during evaluation)
         action, _ = model.predict(obs, deterministic=True)
