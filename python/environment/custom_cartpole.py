@@ -75,7 +75,7 @@ class CartPoleEnv(gym.Env[np.ndarray, Union[int, np.ndarray]]):
     - Pole mass: 0.841 kg
     - Distance to center-of-mass: 0.2 m
     - Custom gravity: 10 m/s²
-    - Custom time scale: 0.1 (10 ms)
+    - Custom time scale: 0.01 (1 ms)
     - Custom viscous drag coefficient: 0.4
     
     The dynamics are implemented using detailed equations of motion that account for
