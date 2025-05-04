@@ -1,5 +1,3 @@
-# compare filters of encoder time derivative, explained under motor deadband compensation
-
 '''
 Encoder Velocity Filtering Analysis Script
 

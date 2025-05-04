@@ -1,5 +1,3 @@
-# motor class, needed to tell motor how fast to spin, 
-
 '''
 Hardware PWM Motor Control Module
 

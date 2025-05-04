@@ -1,5 +1,3 @@
-# needed to read from encoder
-
 '''
 Quadrature Encoder Interface
 

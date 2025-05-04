@@ -1,5 +1,3 @@
-# main file for encoder characterisation
-
 '''
 Encoder Characterization
 
