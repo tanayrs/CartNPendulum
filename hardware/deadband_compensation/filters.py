@@ -1,6 +1,3 @@
-# File to test different filters for encoder, when we measure xdot, the numerical derivative tends to be noisy so we need to add a filter
-# Now to find the best filter, we need to compare them, thats what this file does.
-
 '''
 Encoder Velocity Filter Comparison
 

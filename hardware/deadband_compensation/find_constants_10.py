@@ -1,6 +1,3 @@
-# Now the deadband measurement needs to be averaged over multiple samples, so this file reads the deadband measurement code
-# and then averages the deadband measurements over multiple samples.
-
 '''
 Motor Deadband Compensation Analysis
 

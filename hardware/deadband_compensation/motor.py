@@ -1,5 +1,3 @@
-# motor class file, needed to run the motor
-
 '''
 Hardware PWM Motor Control
 

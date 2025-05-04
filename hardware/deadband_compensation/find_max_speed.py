@@ -1,5 +1,3 @@
-# This file finds the max motor speed and maximum input PWM value
-
 '''
 Motor Maximum Speed Characterization
 
