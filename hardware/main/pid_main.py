@@ -54,8 +54,6 @@ from controller import TiltController  # PID controller for tilt
 from logger import DataLogger  # Data logging utility
 import signal
 import datetime
-import gymnasium
-from gymnasium.envs.registration import register  # For registering custom environment
 
 # Add the path to your custom environment
 base_dir = '/home/cartpend/CartNPendulum'  # Adjust to your project root
@@ -81,37 +79,13 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 # Hardware initialization
-imu = MPU6050(roll_offset=3.5)
+imu = MPU6050(roll_offset=2.0)
 motor = HardwarePWMMotor()
 # Initialize hardware encoder
 encoder = PiEncoder(pin_a=23, pin_b=24)
 # Initialize data processor
 processor = EncoderProcessor(pulses_per_rev=2262)
-controller = TiltController(Kp=3000.0, Ki=10.0, Kd=-10)
-
-# Register the custom environment
-try:
-    register(
-        id="CustomCartPole-v1",
-        entry_point="python.environment.custom_cartpole:CartPoleEnv",  # Path to environment class
-    )
-except gymnasium.error.Error as e:
-    # If the environment has already been registered, ignore the error
-    if "already registered" in str(e):
-        pass
-    else:
-        raise e
-
-# Use absolute paths for model files
-# ppo_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'PPO_model_jia.zip')
-# dqn_model_path = os.path.join(base_dir, 'Training', 'Saved Models', 'DQN_model.zip')
-
-
-# Use hardware trained model 
-model_path = os.path.join(base_dir, 'hardware', 'tuning','hardware_trained_models', 'final_hardware_model.zip')
-
-from controller_rl import HardwareModelAgent
-controller_rl = HardwareModelAgent(model_type='DQN', model_path=model_path, env_name='CustomCartPole-v1')
+controller = TiltController(Kp=3750.0, Ki=15.0, Kd=-70)
 
 logger = DataLogger()  # Initialize data logger
 logger.start()  # Start logging thread
@@ -138,9 +112,6 @@ try:
             
             dts = datetime.datetime.now()
             control_output = controller.update(roll_angle, gyro_rate_x)
-            theta_rad = np.pi*roll_angle/180
-            thetadot_rad = np.pi*gyro_rate_x/180
-            #control_output = controller_rl.control([x, x_dot, theta_rad, thetadot_rad])
             dte = datetime.datetime.now()
             time4ctrlout = dte-dts
 

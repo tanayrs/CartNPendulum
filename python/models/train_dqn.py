@@ -45,7 +45,7 @@ os.makedirs(log_path, exist_ok=True)  # Create directory if it doesn't exist
 model = DQN('MlpPolicy', environment, verbose=1, tensorboard_log=log_path)  # MlpPolicy uses a neural network
 
 # Train the model (remove callback if undefined)
-model.learn(total_timesteps=200000)  # Train for 200,000 steps
+model.learn(total_timesteps=200000)  # Train for 200K steps
 
 # Save the trained model
 dqn_path = os.path.join('Training', 'Saved Models', 'DQN_model')  # Path to save model
@@ -53,9 +53,9 @@ os.makedirs(os.path.dirname(dqn_path), exist_ok=True)  # Create directory if it 
 model.save(dqn_path)  # Save model to disk
 
 # Reload the model (using the same environment)
-model = DQN.load(dqn_path, env=environment)  # Load model from disk
+# model = DQN.load(dqn_path, env=environment)  # Load model from disk
 
 # Evaluate the policy over 10 episodes with rendering enabled (if your setup supports rendering)
-evaluate_policy(model, environment, n_eval_episodes=10, render=True)  # Run 10 test episodes
+# evaluate_policy(model, environment, n_eval_episodes=10, render=True)  # Run 10 test episodes
 
 environment.close()  # Clean up environment resources

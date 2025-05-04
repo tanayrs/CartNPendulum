@@ -38,18 +38,18 @@ env = gym.make(environment_name, render_mode="human")
 
 # --- Load your saved models ---
 # Adjust these paths to where you have saved your models.
-ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model")
-# dqn_model_path = os.path.join("Training", "Saved Models", "DQN_model")
+# ppo_model_path = os.path.join("Training", "Saved Models", "PPO_model")
+dqn_model_path = os.path.join("Training", "Saved Models", "DQN_model")
 
 # Uncomment the model you want to test, or test both in succession:
 
 # Load PPO model:
-model = PPO.load(ppo_model_path, env=env)
-print("Loaded PPO model.")
+# model = PPO.load(ppo_model_path, env=env)
+# print("Loaded PPO model.")
 
 # Alternatively, load DQN model:
-# model = DQN.load(dqn_model_path, env=env)
-# print("Loaded DQN model.")
+model = DQN.load(dqn_model_path, env=env)
+print("Loaded DQN model.")
 
 # --- Render the model in a few episodes ---
 episodes = 150

@@ -3,7 +3,10 @@ hardware/main/__pycache__/*
 python/env/__pycache__/
 hardware/botenv/
 Logs
+plotting
+
 # Byte-compiled / optimized / DLL files
+.DS_Store
 __pycache__/
 *.py[cod]
 *$py.class
@@ -179,3 +182,4 @@ cython_debug/
 .pypirc
 
 *.bak
+hardware/main/visualisation
